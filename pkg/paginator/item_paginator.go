@@ -18,6 +18,9 @@ func (p *ItemPaginator[T]) ItemsOnCurrentPage() []T {
 }
 
 func (p *ItemPaginator[T]) CurrentItem() T {
-	index := p.page*p.limit + p.cursor
-	return p.items[index]
+	return p.items[p.CurrentIndex()]
+}
+
+func (p *ItemPaginator[T]) CurrentIndex() int {
+	return p.page*p.limit + p.cursor
 }
