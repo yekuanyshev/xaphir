@@ -3,9 +3,9 @@ package chatlist
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
-	"github.com/yekuanyshev/xaphir/tui/components/dialog"
 )
 
 type Component struct {

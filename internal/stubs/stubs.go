@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/yekuanyshev/xaphir/tui/components/chatlist"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
 )
 
 //go:embed stubs.json

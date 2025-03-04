@@ -3,7 +3,7 @@ package chatlist
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/yekuanyshev/xaphir/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 )
 
 type Chat struct {

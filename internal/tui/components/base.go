@@ -3,8 +3,8 @@ package components
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/tui/components/chatlist"
-	"github.com/yekuanyshev/xaphir/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 )
 
 type Base struct {

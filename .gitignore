@@ -27,4 +27,4 @@ go.work.sum
 .vscode/
 bin/
 
-stubs/stubs.json
+internal/stubs/stubs.json
