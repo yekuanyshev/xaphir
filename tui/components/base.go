@@ -2,16 +2,23 @@ package components
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/tui/components/chatlist"
+	"github.com/yekuanyshev/xaphir/tui/components/dialog"
 )
 
 type Base struct {
 	chatList *chatlist.Component
+	dialog   *dialog.Component
 }
 
-func NewBase(chatList *chatlist.Component) *Base {
+func NewBase(
+	chatList *chatlist.Component,
+	dialog *dialog.Component,
+) *Base {
 	return &Base{
 		chatList: chatList,
+		dialog:   dialog,
 	}
 }
 
@@ -31,18 +38,32 @@ func (b *Base) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		chatListWidth := int(float64(msg.Width) * 0.2)
 		chatListHeight := int(float64(msg.Height) * 0.9)
 
+		dialogWidth := int(float64(msg.Width)*0.8 - 3)
+		dialogHeight := int(float64(msg.Height) * 0.9)
+
 		b.chatList.SetWidth(chatListWidth)
 		b.chatList.SetHeight(chatListHeight)
+
+		b.dialog.SetWidth(dialogWidth)
+		b.dialog.SetHeight(dialogHeight)
 	}
 
 	model, chatListCmd := b.chatList.Update(msg)
 	b.chatList = model.(*chatlist.Component)
 
+	model, dialogCmd := b.dialog.Update(msg)
+	b.dialog = model.(*dialog.Component)
+
 	return b, tea.Sequence(
 		chatListCmd,
+		dialogCmd,
 	)
 }
 
 func (b *Base) View() string {
-	return b.chatList.View()
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		b.chatList.View(),
+		b.dialog.View(),
+	)
 }

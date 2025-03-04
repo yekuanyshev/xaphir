@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
+	"github.com/yekuanyshev/xaphir/tui/components/dialog"
 )
 
 type Component struct {
@@ -13,17 +14,24 @@ type Component struct {
 	items     []ChatItem
 	paginator *Paginator[ChatItem]
 
+	dialog *dialog.Component
+
 	style      lipgloss.Style
 	titleStyle lipgloss.Style
 }
 
-func NewComponent(chats []Chat) *Component {
+func NewComponent(
+	chats []Chat,
+	dialog *dialog.Component,
+) *Component {
 	items := utils.SliceMap(chats, func(chat Chat) ChatItem {
 		return NewChatItem(chat)
 	})
 	paginatorLimit := 15
 
 	return &Component{
+		dialog: dialog,
+
 		style: lipgloss.NewStyle().
 			PaddingLeft(1).PaddingRight(1).
 			BorderStyle(lipgloss.RoundedBorder()).
@@ -59,6 +67,8 @@ func (cl *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cl.paginator.SkipToPrevPage()
 		}
 	}
+
+	cl.dialog.SetTitle(cl.paginator.CurrentItem().Username)
 
 	return cl, nil
 }
