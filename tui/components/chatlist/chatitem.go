@@ -1,14 +1,20 @@
 package chatlist
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/yekuanyshev/xaphir/tui/components/dialog"
+)
 
 type Chat struct {
 	Username    string
 	LastMessage string
+	Messages    []dialog.Message
 }
 
 type ChatItem struct {
 	Chat
+	selected bool
 
 	style                    lipgloss.Style
 	titleStyle               lipgloss.Style
@@ -40,20 +46,28 @@ func NewChatItem(chat Chat) ChatItem {
 	}
 }
 
-func (ci ChatItem) View(isSelected bool) string {
-	view := lipgloss.JoinVertical(
-		lipgloss.Left,
-		ci.titleStyle.Render(ci.Username),
-		ci.descriptionStyle.Render(ci.LastMessage),
-	)
+func (ci ChatItem) View(width int) string {
+	ci.LastMessage = ansi.Truncate(ci.LastMessage, width, "...")
 
-	if isSelected {
-		view = lipgloss.JoinVertical(
-			lipgloss.Left,
-			ci.selectedTitleStyle.Render(ci.Username),
-			ci.selectedDescriptionStyle.Render(ci.LastMessage),
+	if ci.selected {
+		return ci.style.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				ci.selectedTitleStyle.Render(ci.Username),
+				ci.selectedDescriptionStyle.Render(ci.LastMessage),
+			),
 		)
 	}
 
-	return ci.style.Render(view)
+	return ci.style.Render(
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			ci.titleStyle.Render(ci.Username),
+			ci.descriptionStyle.Render(ci.LastMessage),
+		),
+	)
+}
+
+func (ci *ChatItem) SetSelected(selected bool) {
+	ci.selected = selected
 }

@@ -49,52 +49,58 @@ func NewComponent(
 	}
 }
 
-func (cl *Component) Init() tea.Cmd {
+func (c *Component) Init() tea.Cmd {
 	return nil
 }
 
-func (cl *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	previousItemIdx := c.paginator.CurrentIndex()
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "down":
-			cl.paginator.Increment()
+			c.paginator.Increment()
 		case "up":
-			cl.paginator.Decrement()
+			c.paginator.Decrement()
 		case "right":
-			cl.paginator.SkipToNextPage()
+			c.paginator.SkipToNextPage()
 		case "left":
-			cl.paginator.SkipToPrevPage()
+			c.paginator.SkipToPrevPage()
 		}
 	}
 
-	cl.dialog.SetTitle(cl.paginator.CurrentItem().Username)
+	c.items[previousItemIdx].SetSelected(false)
+	c.items[c.paginator.CurrentIndex()].SetSelected(true)
 
-	return cl, nil
+	c.dialog.SetTitle(c.paginator.CurrentItem().Username)
+	c.dialog.SetItems(c.paginator.CurrentItem().Messages)
+
+	return c, nil
 }
 
-func (cl *Component) View() string {
-	cl.style = cl.style.Width(cl.width).Height(cl.height)
-	cl.paginator.SetWidth(cl.width - cl.style.GetHorizontalFrameSize())
+func (c *Component) View() string {
+	c.style = c.style.Width(c.width).Height(c.height)
+	c.paginator.SetWidth(c.width - c.style.GetHorizontalFrameSize())
 
 	var sections []string
-	availHeight := cl.style.GetHeight()
+	availHeight := c.style.GetHeight()
 
-	titleView := cl.titleStyle.Render("Chats")
+	titleView := c.titleStyle.Render("Chats")
 	sections = append(sections, titleView)
 	availHeight -= lipgloss.Height(titleView)
 
-	itemsView := cl.itemsView()
+	itemsView := c.itemsView()
 	sections = append(sections, itemsView)
 	availHeight -= lipgloss.Height(itemsView)
 
 	// append empty space
 	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
 
-	paginatorView := cl.paginator.View()
+	paginatorView := c.paginator.View()
 	sections = append(sections, paginatorView)
 
-	return cl.style.Render(
+	return c.style.Render(
 		lipgloss.JoinVertical(
 			lipgloss.Left,
 			sections...,
@@ -102,20 +108,23 @@ func (cl *Component) View() string {
 	)
 }
 
-func (cl *Component) SetWidth(w int) {
-	cl.width = w
+func (c *Component) SetWidth(w int) {
+	c.width = w
 }
 
-func (cl *Component) SetHeight(h int) {
-	cl.height = h
+func (c *Component) SetHeight(h int) {
+	c.height = h
 }
 
-func (cl *Component) itemsView() string {
-	var items []string
-	for i, chatItem := range cl.paginator.ItemsOnCurrentPage() {
-		isSelected := cl.paginator.Cursor() == i
-		itemView := chatItem.View(isSelected)
-		items = append(items, itemView)
+func (c *Component) itemsView() string {
+	w := c.width - c.style.GetHorizontalFrameSize()
+
+	itemsOnPage := c.paginator.ItemsOnCurrentPage()
+
+	items := make([]string, 0, len(itemsOnPage))
+
+	for _, chatItem := range itemsOnPage {
+		items = append(items, chatItem.View(w))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, items...)
