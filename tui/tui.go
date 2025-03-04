@@ -4,10 +4,10 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/yekuanyshev/xaphir/stubs"
 	"github.com/yekuanyshev/xaphir/tui/components"
 	"github.com/yekuanyshev/xaphir/tui/components/chatlist"
 	"github.com/yekuanyshev/xaphir/tui/components/dialog"
-	"github.com/yekuanyshev/xaphir/tui/stubs"
 )
 
 func Run() {
