@@ -4,14 +4,14 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/yekuanyshev/xaphir/tui/components"
+	"github.com/yekuanyshev/xaphir/tui/components/chatlist"
 )
 
 //go:embed stubs.json
 var stubsFile []byte
 
 type Stubs struct {
-	Chats []components.Chat `json:"chats"`
+	Chats []chatlist.Chat `json:"chats"`
 }
 
 func Load() (Stubs, error) {
