@@ -3,14 +3,15 @@ package chatlist
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Component struct {
-	width     int
-	height    int
+	*base.Component
+
 	items     []ChatItem
 	paginator *Paginator[ChatItem]
 
@@ -30,6 +31,8 @@ func NewComponent(
 	paginatorLimit := 15
 
 	return &Component{
+		Component: base.NewComponent(),
+
 		dialog: dialog,
 
 		style: lipgloss.NewStyle().
@@ -54,6 +57,10 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if !c.Focused() {
+		return c, nil
+	}
+
 	previousItemIdx := c.paginator.CurrentIndex()
 
 	switch msg := msg.(type) {
@@ -80,8 +87,16 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	c.style = c.style.Width(c.width).Height(c.height)
-	c.paginator.SetWidth(c.width - c.style.GetHorizontalFrameSize())
+	if c.Focused() {
+		c.style = c.style.Faint(false)
+		c.titleStyle = c.titleStyle.Faint(false)
+	} else {
+		c.style = c.style.Faint(true)
+		c.titleStyle = c.titleStyle.Faint(true)
+	}
+
+	c.style = c.style.Width(c.Width()).Height(c.Height())
+	c.paginator.SetWidth(c.Width() - c.style.GetHorizontalFrameSize())
 
 	var sections []string
 	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
@@ -110,16 +125,8 @@ func (c *Component) View() string {
 	)
 }
 
-func (c *Component) SetWidth(w int) {
-	c.width = w
-}
-
-func (c *Component) SetHeight(h int) {
-	c.height = h
-}
-
 func (c *Component) itemsView() string {
-	w := c.width - c.style.GetHorizontalFrameSize()
+	w := c.Width() - c.style.GetHorizontalFrameSize()
 
 	itemsOnPage := c.paginator.ItemsOnCurrentPage()
 

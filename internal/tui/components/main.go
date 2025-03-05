@@ -7,61 +7,63 @@ import (
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 )
 
-type Base struct {
+type Main struct {
 	chatList *chatlist.Component
 	dialog   *dialog.Component
 }
 
-func NewBase(
+func NewMain(
 	chatList *chatlist.Component,
 	dialog *dialog.Component,
-) *Base {
-	return &Base{
+) *Main {
+	return &Main{
 		chatList: chatList,
 		dialog:   dialog,
 	}
 }
 
-func (b *Base) Init() tea.Cmd {
+func (m *Main) Init() tea.Cmd {
+	m.chatList.Focus()
+	m.dialog.Blur()
 	return nil
 }
 
-func (b *Base) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
-			return b, tea.Quit
+			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
 		chatListWidth := int(float64(msg.Width) * 0.2)
 		dialogWidth := int(float64(msg.Width)*0.8 - 3)
 		height := int(float64(msg.Height) * 0.9)
 
-		b.chatList.SetWidth(chatListWidth)
-		b.chatList.SetHeight(height)
+		m.chatList.SetWidth(chatListWidth)
+		m.chatList.SetHeight(height)
 
-		b.dialog.SetWidth(dialogWidth)
-		b.dialog.SetHeight(height)
+		m.dialog.SetWidth(dialogWidth)
+		m.dialog.SetHeight(height)
 	}
 
-	model, chatListCmd := b.chatList.Update(msg)
-	b.chatList = model.(*chatlist.Component)
+	model, chatListCmd := m.chatList.Update(msg)
+	m.chatList = model.(*chatlist.Component)
 
-	model, dialogCmd := b.dialog.Update(msg)
-	b.dialog = model.(*dialog.Component)
+	model, dialogCmd := m.dialog.Update(msg)
+	m.dialog = model.(*dialog.Component)
 
-	return b, tea.Sequence(
+	return m, tea.Sequence(
 		chatListCmd,
 		dialogCmd,
 	)
 }
 
-func (b *Base) View() string {
+func (m *Main) View() string {
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		b.chatList.View(),
-		b.dialog.View(),
+		m.chatList.View(),
+		m.dialog.View(),
 	)
 }

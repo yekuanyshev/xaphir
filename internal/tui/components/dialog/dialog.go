@@ -4,14 +4,15 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Component struct {
-	width  int
-	height int
-	title  string
-	items  []MessageItem
+	*base.Component
+
+	title string
+	items []MessageItem
 
 	input textinput.Model
 
@@ -26,6 +27,8 @@ func NewComponent() *Component {
 	input.Blur()
 
 	return &Component{
+		Component: base.NewComponent(),
+
 		input: input,
 
 		style: lipgloss.NewStyle().
@@ -52,11 +55,25 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if !c.Focused() {
+		return c, nil
+	}
+
 	return c, nil
 }
 
 func (c *Component) View() string {
-	c.style = c.style.Width(c.width).Height(c.height)
+	if c.Focused() {
+		c.style = c.style.Faint(false)
+		c.titleStyle = c.titleStyle.Faint(false)
+		c.input.Focus()
+	} else {
+		c.style = c.style.Faint(true)
+		c.titleStyle = c.titleStyle.Faint(true)
+		c.input.Blur()
+	}
+
+	c.style = c.style.Width(c.Width()).Height(c.Height())
 	c.inputStyle = c.inputStyle.Width(c.style.GetWidth() - c.style.GetHorizontalFrameSize() - 2)
 	c.input.Width = c.inputStyle.GetWidth()
 
@@ -85,14 +102,6 @@ func (c *Component) View() string {
 			sections...,
 		),
 	)
-}
-
-func (c *Component) SetWidth(w int) {
-	c.width = w
-}
-
-func (c *Component) SetHeight(h int) {
-	c.height = h
 }
 
 func (c *Component) SetTitle(title string) {

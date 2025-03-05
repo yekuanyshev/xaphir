@@ -25,10 +25,10 @@ func Run(ctx context.Context) {
 
 	dialog := dialog.NewComponent()
 	chatList := chatlist.NewComponent(stubs.Chats, dialog)
-	base := components.NewBase(chatList, dialog)
+	main := components.NewMain(chatList, dialog)
 
 	p := tea.NewProgram(
-		base,
+		main,
 		tea.WithContext(ctx),
 		tea.WithAltScreen(),
 	)
