@@ -84,7 +84,7 @@ func (c *Component) View() string {
 	c.paginator.SetWidth(c.width - c.style.GetHorizontalFrameSize())
 
 	var sections []string
-	availHeight := c.style.GetHeight()
+	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
 
 	titleView := c.titleStyle.Render("Chats")
 	sections = append(sections, titleView)
@@ -94,10 +94,12 @@ func (c *Component) View() string {
 	sections = append(sections, itemsView)
 	availHeight -= lipgloss.Height(itemsView)
 
+	paginatorView := c.paginator.View()
+	availHeight -= lipgloss.Height(paginatorView)
+
 	// append empty space
 	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
 
-	paginatorView := c.paginator.View()
 	sections = append(sections, paginatorView)
 
 	return c.style.Render(

@@ -41,13 +41,10 @@ func (mi MessageItem) View() string {
 		mi.timeStyle.Render(mi.SendTime.Format("04:05")),
 	)
 
-	w := mi.width - 2
-
-	view := lipgloss.PlaceHorizontal(w, lipgloss.Left, s)
-
 	if mi.IsFromMe {
-		view = lipgloss.PlaceHorizontal(w, lipgloss.Right, s)
+		return lipgloss.PlaceHorizontal(mi.width, lipgloss.Right, s)
 	}
 
-	return view
+	return lipgloss.PlaceHorizontal(mi.width, lipgloss.Left, s)
+
 }

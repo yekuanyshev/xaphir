@@ -1,6 +1,7 @@
 package dialog
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
@@ -12,12 +13,21 @@ type Component struct {
 	title  string
 	items  []MessageItem
 
+	input textinput.Model
+
 	style      lipgloss.Style
 	titleStyle lipgloss.Style
+	inputStyle lipgloss.Style
 }
 
 func NewComponent() *Component {
+	input := textinput.New()
+	input.Placeholder = "Write a message..."
+	input.Blur()
+
 	return &Component{
+		input: input,
+
 		style: lipgloss.NewStyle().
 			PaddingLeft(1).PaddingRight(1).
 			BorderStyle(lipgloss.RoundedBorder()).
@@ -29,6 +39,11 @@ func NewComponent() *Component {
 			Foreground(lipgloss.Color("#fff")).
 			Background(lipgloss.Color("62")).
 			Bold(true),
+
+		inputStyle: lipgloss.NewStyle().
+			PaddingLeft(1).PaddingRight(1).
+			BorderStyle(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("36")),
 	}
 }
 
@@ -42,14 +57,27 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (c *Component) View() string {
 	c.style = c.style.Width(c.width).Height(c.height)
+	c.inputStyle = c.inputStyle.Width(c.style.GetWidth() - c.style.GetHorizontalFrameSize() - 2)
+	c.input.Width = c.inputStyle.GetWidth()
 
 	var sections []string
+	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
 
 	titleView := c.titleStyle.Render(c.title)
 	sections = append(sections, titleView)
+	availHeight -= lipgloss.Height(titleView)
 
 	itemsView := c.itemsView()
 	sections = append(sections, itemsView)
+	availHeight -= lipgloss.Height(itemsView)
+
+	inputView := c.inputStyle.Render(c.input.View())
+	availHeight -= lipgloss.Height(inputView)
+
+	// append empty space
+	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
+
+	sections = append(sections, inputView)
 
 	return c.style.Render(
 		lipgloss.JoinVertical(
@@ -73,32 +101,32 @@ func (c *Component) SetTitle(title string) {
 
 func (c *Component) SetItems(items []Message) {
 	c.items = utils.SliceMap(items, func(message Message) MessageItem {
-		return NewMessageItem(message, c.width)
+		return NewMessageItem(message, c.style.GetWidth()-c.style.GetHorizontalFrameSize())
 	})
 }
 
 func (c *Component) itemsView() string {
-	avalHeight := c.height - c.titleStyle.GetHeight() - c.titleStyle.GetVerticalBorderSize()
+	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
+	availHeight -= lipgloss.Height(c.titleStyle.Render(c.title))
+	availHeight -= lipgloss.Height(c.inputStyle.Render(c.input.View()))
 
 	items := make([]string, 0, 20)
-	block := ""
 	h := 0
 
-	for _, item := range c.items {
-		itemView := item.View()
+	for i := range c.items {
+		itemView := c.items[i].View()
 		items = append(items, itemView)
 
 		h += lipgloss.Height(itemView)
 
-		if h >= avalHeight {
-			block = lipgloss.JoinVertical(lipgloss.Left, items[:len(items)-1]...)
+		if h >= availHeight {
+			items = items[:len(items)-1]
 			break
 		}
 	}
 
-	if block == "" {
-		block = lipgloss.JoinVertical(lipgloss.Left, items...)
-	}
-
-	return block
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		items...,
+	)
 }
