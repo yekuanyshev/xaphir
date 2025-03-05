@@ -1,7 +1,11 @@
 package main
 
-import "github.com/yekuanyshev/xaphir/internal/tui"
+import (
+	"context"
+
+	"github.com/yekuanyshev/xaphir/internal/tui"
+)
 
 func main() {
-	tui.Run()
+	tui.Run(context.Background())
 }
