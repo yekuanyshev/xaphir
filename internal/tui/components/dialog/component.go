@@ -98,6 +98,8 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			c.items = append(c.items, item.NewItem(message, c.InnerWidth()))
 			c.input.SetValue("")
+			c.end = len(c.items)
+			c.start = c.calculateStart(c.end - 1)
 		case "down":
 			// ignore if component shows all messages
 			if c.end != len(c.items) {
@@ -167,15 +169,12 @@ func (c *Component) SetItems(items []item.Message) {
 	c.items = utils.SliceMap(items, func(message item.Message) item.Item {
 		return item.NewItem(message, c.InnerWidth())
 	})
-	c.start = 0
 	c.end = len(c.items)
+	c.start = c.calculateStart(c.end - 1)
 }
 
 func (c *Component) itemsView() string {
-	availHeight := c.InnerHeight()
-	availHeight -= lipgloss.Height(c.titleStyle.Render(c.title))
-	availHeight -= lipgloss.Height(c.inputStyle.Render(c.input.View()))
-
+	availHeight := c.getMessagesAvailableHeight()
 	itemViews := make([]string, 0, 20)
 	h := 0
 
@@ -211,4 +210,26 @@ func (c *Component) Blur() {
 func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
 	event, ok := msg.(events.DialogFocus)
 	return event, ok
+}
+
+func (c *Component) getMessagesAvailableHeight() int {
+	return c.InnerHeight() -
+		lipgloss.Height(c.titleStyle.Render(c.title)) -
+		lipgloss.Height(c.inputStyle.Render(c.input.View()))
+}
+
+func (c *Component) calculateStart(end int) int {
+	availHeight := c.getMessagesAvailableHeight()
+	h := 0
+	i := end
+
+	for i > 0 {
+		h += lipgloss.Height(c.items[i].View())
+		if h >= availHeight {
+			return i + 1
+		}
+		i--
+	}
+
+	return i
 }
