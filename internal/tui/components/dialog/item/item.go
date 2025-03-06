@@ -1,4 +1,4 @@
-package dialog
+package item
 
 import (
 	"time"
@@ -12,7 +12,7 @@ type Message struct {
 	IsFromMe bool
 }
 
-type MessageItem struct {
+type Item struct {
 	Message
 	width int
 
@@ -20,8 +20,8 @@ type MessageItem struct {
 	timeStyle lipgloss.Style
 }
 
-func NewMessageItem(message Message, width int) MessageItem {
-	return MessageItem{
+func NewItem(message Message, width int) Item {
+	return Item{
 		Message: message,
 		width:   width,
 
@@ -35,16 +35,16 @@ func NewMessageItem(message Message, width int) MessageItem {
 	}
 }
 
-func (mi MessageItem) View() string {
-	s := mi.style.Render(
-		mi.Content,
-		mi.timeStyle.Render(mi.SendTime.Format("04:05")),
+func (i Item) View() string {
+	s := i.style.Render(
+		i.Content,
+		i.timeStyle.Render(i.SendTime.Format("04:05")),
 	)
 
-	if mi.IsFromMe {
-		return lipgloss.PlaceHorizontal(mi.width, lipgloss.Right, s)
+	if i.IsFromMe {
+		return lipgloss.PlaceHorizontal(i.width, lipgloss.Right, s)
 	}
 
-	return lipgloss.PlaceHorizontal(mi.width, lipgloss.Left, s)
+	return lipgloss.PlaceHorizontal(i.width, lipgloss.Left, s)
 
 }

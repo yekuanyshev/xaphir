@@ -1,35 +1,40 @@
-package dialog
+package chatlist
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Component struct {
 	*base.Component
 
-	title string
-	items []MessageItem
+	items     []item.Item
+	paginator *Paginator[item.Item]
 
-	input textinput.Model
+	dialog *dialog.Component
 
 	style      lipgloss.Style
 	titleStyle lipgloss.Style
-	inputStyle lipgloss.Style
 }
 
-func NewComponent() *Component {
-	input := textinput.New()
-	input.Placeholder = "Write a message..."
-	input.Blur()
+func NewComponent(
+	chats []item.Chat,
+	dialog *dialog.Component,
+) *Component {
+	items := utils.SliceMap(chats, func(chat item.Chat) item.Item {
+		return item.NewItem(chat)
+	})
+	paginatorLimit := 15
 
 	return &Component{
 		Component: base.NewComponent(),
 
-		input: input,
+		dialog: dialog,
 
 		style: lipgloss.NewStyle().
 			PaddingLeft(1).PaddingRight(1).
@@ -43,10 +48,8 @@ func NewComponent() *Component {
 			Background(lipgloss.Color("62")).
 			Bold(true),
 
-		inputStyle: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("36")),
+		items:     items,
+		paginator: NewPaginator(paginator.NewItemPaginator(items, paginatorLimit)),
 	}
 }
 
@@ -59,6 +62,28 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 	}
 
+	previousItemIdx := c.paginator.CurrentIndex()
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "down":
+			c.paginator.Increment()
+		case "up":
+			c.paginator.Decrement()
+		case "right":
+			c.paginator.SkipToNextPage()
+		case "left":
+			c.paginator.SkipToPrevPage()
+		}
+	}
+
+	c.items[previousItemIdx].SetSelected(false)
+	c.items[c.paginator.CurrentIndex()].SetSelected(true)
+
+	c.dialog.SetTitle(c.paginator.CurrentItem().Username)
+	c.dialog.SetItems(c.paginator.CurrentItem().Messages)
+
 	return c, nil
 }
 
@@ -66,21 +91,18 @@ func (c *Component) View() string {
 	if c.Focused() {
 		c.style = c.style.Faint(false)
 		c.titleStyle = c.titleStyle.Faint(false)
-		c.input.Focus()
 	} else {
 		c.style = c.style.Faint(true)
 		c.titleStyle = c.titleStyle.Faint(true)
-		c.input.Blur()
 	}
 
 	c.style = c.style.Width(c.Width()).Height(c.Height())
-	c.inputStyle = c.inputStyle.Width(c.style.GetWidth() - c.style.GetHorizontalFrameSize() - 2)
-	c.input.Width = c.inputStyle.GetWidth()
+	c.paginator.SetWidth(c.Width() - c.style.GetHorizontalFrameSize())
 
 	var sections []string
 	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
 
-	titleView := c.titleStyle.Render(c.title)
+	titleView := c.titleStyle.Render("Chats")
 	sections = append(sections, titleView)
 	availHeight -= lipgloss.Height(titleView)
 
@@ -88,13 +110,13 @@ func (c *Component) View() string {
 	sections = append(sections, itemsView)
 	availHeight -= lipgloss.Height(itemsView)
 
-	inputView := c.inputStyle.Render(c.input.View())
-	availHeight -= lipgloss.Height(inputView)
+	paginatorView := c.paginator.View()
+	availHeight -= lipgloss.Height(paginatorView)
 
 	// append empty space
 	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
 
-	sections = append(sections, inputView)
+	sections = append(sections, paginatorView)
 
 	return c.style.Render(
 		lipgloss.JoinVertical(
@@ -104,38 +126,16 @@ func (c *Component) View() string {
 	)
 }
 
-func (c *Component) SetTitle(title string) {
-	c.title = title
-}
-
-func (c *Component) SetItems(items []Message) {
-	c.items = utils.SliceMap(items, func(message Message) MessageItem {
-		return NewMessageItem(message, c.style.GetWidth()-c.style.GetHorizontalFrameSize())
-	})
-}
-
 func (c *Component) itemsView() string {
-	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
-	availHeight -= lipgloss.Height(c.titleStyle.Render(c.title))
-	availHeight -= lipgloss.Height(c.inputStyle.Render(c.input.View()))
+	w := c.Width() - c.style.GetHorizontalFrameSize()
 
-	items := make([]string, 0, 20)
-	h := 0
+	itemsOnPage := c.paginator.ItemsOnCurrentPage()
 
-	for i := range c.items {
-		itemView := c.items[i].View()
-		items = append(items, itemView)
+	items := make([]string, 0, len(itemsOnPage))
 
-		h += lipgloss.Height(itemView)
-
-		if h >= availHeight {
-			items = items[:len(items)-1]
-			break
-		}
+	for _, chatItem := range itemsOnPage {
+		items = append(items, chatItem.View(w))
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		items...,
-	)
+	return lipgloss.JoinVertical(lipgloss.Left, items...)
 }

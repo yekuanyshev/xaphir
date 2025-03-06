@@ -1,18 +1,18 @@
-package chatlist
+package item
 
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 )
 
 type Chat struct {
 	Username    string
 	LastMessage string
-	Messages    []dialog.Message
+	Messages    []item.Message
 }
 
-type ChatItem struct {
+type Item struct {
 	Chat
 	selected bool
 
@@ -23,8 +23,8 @@ type ChatItem struct {
 	selectedDescriptionStyle lipgloss.Style
 }
 
-func NewChatItem(chat Chat) ChatItem {
-	return ChatItem{
+func NewItem(chat Chat) Item {
+	return Item{
 		Chat: chat,
 
 		style: lipgloss.NewStyle().
@@ -46,28 +46,28 @@ func NewChatItem(chat Chat) ChatItem {
 	}
 }
 
-func (ci ChatItem) View(width int) string {
-	ci.LastMessage = ansi.Truncate(ci.LastMessage, width, "...")
+func (i Item) View(width int) string {
+	i.LastMessage = ansi.Truncate(i.LastMessage, width, "...")
 
-	if ci.selected {
-		return ci.style.Render(
+	if i.selected {
+		return i.style.Render(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				ci.selectedTitleStyle.Render(ci.Username),
-				ci.selectedDescriptionStyle.Render(ci.LastMessage),
+				i.selectedTitleStyle.Render(i.Username),
+				i.selectedDescriptionStyle.Render(i.LastMessage),
 			),
 		)
 	}
 
-	return ci.style.Render(
+	return i.style.Render(
 		lipgloss.JoinVertical(
 			lipgloss.Left,
-			ci.titleStyle.Render(ci.Username),
-			ci.descriptionStyle.Render(ci.LastMessage),
+			i.titleStyle.Render(i.Username),
+			i.descriptionStyle.Render(i.LastMessage),
 		),
 	)
 }
 
-func (ci *ChatItem) SetSelected(selected bool) {
-	ci.selected = selected
+func (i *Item) SetSelected(selected bool) {
+	i.selected = selected
 }
