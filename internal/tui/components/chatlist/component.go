@@ -16,7 +16,6 @@ type Component struct {
 	items     []item.Item
 	paginator *Paginator[item.Item]
 
-	style      lipgloss.Style
 	titleStyle lipgloss.Style
 }
 
@@ -27,24 +26,25 @@ func NewComponent(
 		return item.NewItem(chat)
 	})
 	paginatorLimit := 15
+	paginator := NewPaginator(paginator.NewItemPaginator(items, paginatorLimit))
+
+	style := lipgloss.NewStyle().
+		PaddingLeft(1).PaddingRight(1).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("36"))
+
+	titleStyle := lipgloss.NewStyle().
+		PaddingLeft(1).PaddingRight(1).
+		MarginBottom(1).
+		Foreground(lipgloss.Color("#fff")).
+		Background(lipgloss.Color("62")).
+		Bold(true)
 
 	return &Component{
-		Component: base.NewComponent(),
-
-		style: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("36")),
-
-		titleStyle: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			MarginBottom(1).
-			Foreground(lipgloss.Color("#fff")).
-			Background(lipgloss.Color("62")).
-			Bold(true),
-
-		items:     items,
-		paginator: NewPaginator(paginator.NewItemPaginator(items, paginatorLimit)),
+		Component:  base.NewComponent(base.WithStyle(style)),
+		items:      items,
+		paginator:  paginator,
+		titleStyle: titleStyle,
 	}
 }
 
@@ -92,19 +92,18 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	c.style = c.style.Width(c.Width()).Height(c.Height())
-	c.paginator.SetWidth(c.Width() - c.style.GetHorizontalFrameSize())
+	c.paginator.SetWidth(c.InnerWidth())
 
 	if c.Focused() {
-		c.style = c.style.Faint(false)
+		c.SetStyle(c.Style().Faint(false))
 		c.titleStyle = c.titleStyle.Faint(false)
 	} else {
-		c.style = c.style.Faint(true)
+		c.SetStyle(c.Style().Faint(true))
 		c.titleStyle = c.titleStyle.Faint(true)
 	}
 
 	var sections []string
-	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
+	availHeight := c.InnerHeight()
 
 	titleView := c.titleStyle.Render("Chats")
 	sections = append(sections, titleView)
@@ -122,7 +121,7 @@ func (c *Component) View() string {
 
 	sections = append(sections, paginatorView)
 
-	return c.style.Render(
+	return c.Render(
 		lipgloss.JoinVertical(
 			lipgloss.Left,
 			sections...,
@@ -131,14 +130,12 @@ func (c *Component) View() string {
 }
 
 func (c *Component) itemsView() string {
-	w := c.Width() - c.style.GetHorizontalFrameSize()
-
 	itemsOnPage := c.paginator.ItemsOnCurrentPage()
 
 	items := make([]string, 0, len(itemsOnPage))
 
 	for _, chatItem := range itemsOnPage {
-		items = append(items, chatItem.View(w))
+		items = append(items, chatItem.View(c.InnerWidth()))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, items...)

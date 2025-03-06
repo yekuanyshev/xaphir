@@ -15,14 +15,16 @@ import (
 type Component struct {
 	*base.Component
 
-	title string
+	title        string
+	blurredTitle string
+
 	items []item.Item
 
 	input textinput.Model
 
-	style      lipgloss.Style
-	titleStyle lipgloss.Style
-	inputStyle lipgloss.Style
+	titleStyle        lipgloss.Style
+	blurredTitleStyle lipgloss.Style
+	inputStyle        lipgloss.Style
 }
 
 func NewComponent() *Component {
@@ -30,27 +32,37 @@ func NewComponent() *Component {
 	input.Placeholder = "Write a message..."
 	input.Blur()
 
+	blurredTitle := "Select a chat to start messaging..."
+
+	style := lipgloss.NewStyle().
+		PaddingLeft(1).PaddingRight(1).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("36"))
+
+	titleStyle := lipgloss.NewStyle().
+		PaddingLeft(1).PaddingRight(1).
+		MarginBottom(1).
+		Foreground(lipgloss.Color("#fff")).
+		Background(lipgloss.Color("62")).
+		Bold(true)
+
+	blurredTitleStyle := lipgloss.NewStyle().
+		Faint(true)
+
+	inputStyle := lipgloss.NewStyle().
+		PaddingLeft(1).PaddingRight(1).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("36"))
+
 	return &Component{
-		Component: base.NewComponent(),
-
-		input: input,
-
-		style: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("36")),
-
-		titleStyle: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			MarginBottom(1).
-			Foreground(lipgloss.Color("#fff")).
-			Background(lipgloss.Color("62")).
-			Bold(true),
-
-		inputStyle: lipgloss.NewStyle().
-			PaddingLeft(1).PaddingRight(1).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("36")),
+		Component:         base.NewComponent(base.WithStyle(style)),
+		title:             "",
+		blurredTitle:      blurredTitle,
+		items:             nil,
+		input:             input,
+		titleStyle:        titleStyle,
+		blurredTitleStyle: blurredTitleStyle,
+		inputStyle:        inputStyle,
 	}
 }
 
@@ -82,8 +94,7 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				SendTime: time.Now(),
 				IsFromMe: true,
 			}
-			w := c.style.GetWidth() - c.style.GetHorizontalFrameSize()
-			c.items = append(c.items, item.NewItem(message, w))
+			c.items = append(c.items, item.NewItem(message, c.InnerWidth()))
 			c.input.SetValue("")
 		}
 	}
@@ -97,25 +108,21 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	c.style = c.style.Width(c.Width()).Height(c.Height())
-	c.inputStyle = c.inputStyle.Width(
-		c.style.GetWidth() - c.style.GetHorizontalFrameSize() - c.inputStyle.GetHorizontalFrameSize(),
-	)
+	c.inputStyle = c.inputStyle.Width(c.InnerWidth() - c.inputStyle.GetHorizontalFrameSize())
 	c.input.Width = c.inputStyle.GetWidth()
 
 	if !c.Focused() {
-		return c.style.Render(
+		return c.Render(
 			lipgloss.Place(
-				c.Width()-c.style.GetHorizontalFrameSize(),
-				c.Height()-c.style.GetVerticalFrameSize(),
+				c.InnerWidth(), c.InnerHeight(),
 				lipgloss.Center, lipgloss.Center,
-				lipgloss.NewStyle().Faint(true).Render("Select a chat to start messaging..."),
+				c.blurredTitleStyle.Render(c.blurredTitle),
 			),
 		)
 	}
 
 	var sections []string
-	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
+	availHeight := c.InnerHeight()
 
 	titleView := c.titleStyle.Render(c.title)
 	sections = append(sections, titleView)
@@ -133,7 +140,7 @@ func (c *Component) View() string {
 
 	sections = append(sections, inputView)
 
-	return c.style.Render(
+	return c.Render(
 		lipgloss.JoinVertical(
 			lipgloss.Left,
 			sections...,
@@ -147,12 +154,12 @@ func (c *Component) SetTitle(title string) {
 
 func (c *Component) SetItems(items []item.Message) {
 	c.items = utils.SliceMap(items, func(message item.Message) item.Item {
-		return item.NewItem(message, c.style.GetWidth()-c.style.GetHorizontalFrameSize())
+		return item.NewItem(message, c.InnerWidth())
 	})
 }
 
 func (c *Component) itemsView() string {
-	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
+	availHeight := c.InnerHeight()
 	availHeight -= lipgloss.Height(c.titleStyle.Render(c.title))
 	availHeight -= lipgloss.Height(c.inputStyle.Render(c.input.View()))
 
