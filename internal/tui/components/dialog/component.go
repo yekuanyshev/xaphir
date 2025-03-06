@@ -18,6 +18,8 @@ type Component struct {
 	title        string
 	blurredTitle string
 
+	start int
+	end   int
 	items []item.Item
 
 	input textinput.Model
@@ -96,6 +98,15 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			c.items = append(c.items, item.NewItem(message, c.InnerWidth()))
 			c.input.SetValue("")
+		case "down":
+			// ignore if component shows all messages
+			if c.end != len(c.items) {
+				c.start = min(c.start+1, c.end-c.start-1)
+				c.end = min(c.end+1, len(c.items))
+			}
+		case "up":
+			c.start = max(c.start-1, 0)
+			c.end = max(c.end-1, c.end-c.start)
 		}
 	}
 
@@ -129,7 +140,6 @@ func (c *Component) View() string {
 	availHeight -= lipgloss.Height(titleView)
 
 	itemsView := c.itemsView()
-	sections = append(sections, itemsView)
 	availHeight -= lipgloss.Height(itemsView)
 
 	inputView := c.inputStyle.Render(c.input.View())
@@ -137,6 +147,7 @@ func (c *Component) View() string {
 
 	// append empty space
 	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
+	sections = append(sections, itemsView)
 
 	sections = append(sections, inputView)
 
@@ -156,6 +167,8 @@ func (c *Component) SetItems(items []item.Message) {
 	c.items = utils.SliceMap(items, func(message item.Message) item.Item {
 		return item.NewItem(message, c.InnerWidth())
 	})
+	c.start = 0
+	c.end = len(c.items)
 }
 
 func (c *Component) itemsView() string {
@@ -163,24 +176,25 @@ func (c *Component) itemsView() string {
 	availHeight -= lipgloss.Height(c.titleStyle.Render(c.title))
 	availHeight -= lipgloss.Height(c.inputStyle.Render(c.input.View()))
 
-	items := make([]string, 0, 20)
+	itemViews := make([]string, 0, 20)
 	h := 0
 
-	for i := range c.items {
+	for i := c.start; i < c.end; i++ {
 		itemView := c.items[i].View()
-		items = append(items, itemView)
+		itemViews = append(itemViews, itemView)
 
 		h += lipgloss.Height(itemView)
 
 		if h >= availHeight {
-			items = items[:len(items)-1]
+			itemViews = itemViews[:len(itemViews)-1]
+			c.end = i
 			break
 		}
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		items...,
+		itemViews...,
 	)
 }
 
