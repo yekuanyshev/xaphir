@@ -5,6 +5,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
@@ -12,7 +14,7 @@ type Component struct {
 	*base.Component
 
 	title string
-	items []MessageItem
+	items []item.Item
 
 	input textinput.Model
 
@@ -55,22 +57,39 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if msg, ok := c.isFocusCMD(msg); ok {
+		c.SetTitle(msg.Title)
+		c.SetItems(msg.Items)
+		c.Focus()
+		return c, nil
+	}
+
 	if !c.Focused() {
 		return c, nil
+	}
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			c.Blur()
+			return c, events.ChatListFocusCMD()
+		}
 	}
 
 	return c, nil
 }
 
 func (c *Component) View() string {
-	if c.Focused() {
-		c.style = c.style.Faint(false)
-		c.titleStyle = c.titleStyle.Faint(false)
-		c.input.Focus()
-	} else {
-		c.style = c.style.Faint(true)
-		c.titleStyle = c.titleStyle.Faint(true)
-		c.input.Blur()
+	if !c.Focused() {
+		return c.style.Render(
+			lipgloss.Place(
+				c.Width()-c.style.GetHorizontalFrameSize(),
+				c.Height()-c.style.GetVerticalFrameSize(),
+				lipgloss.Center, lipgloss.Center,
+				lipgloss.NewStyle().Faint(true).Render("Select a chat to start messaging..."),
+			),
+		)
 	}
 
 	c.style = c.style.Width(c.Width()).Height(c.Height())
@@ -108,9 +127,9 @@ func (c *Component) SetTitle(title string) {
 	c.title = title
 }
 
-func (c *Component) SetItems(items []Message) {
-	c.items = utils.SliceMap(items, func(message Message) MessageItem {
-		return NewMessageItem(message, c.style.GetWidth()-c.style.GetHorizontalFrameSize())
+func (c *Component) SetItems(items []item.Message) {
+	c.items = utils.SliceMap(items, func(message item.Message) item.Item {
+		return item.NewItem(message, c.style.GetWidth()-c.style.GetHorizontalFrameSize())
 	})
 }
 
@@ -138,4 +157,18 @@ func (c *Component) itemsView() string {
 		lipgloss.Left,
 		items...,
 	)
+}
+
+func (c *Component) Focus() {
+	c.Component.Focus()
+	c.input.Focus()
+}
+
+func (c *Component) Blur() {
+	c.Component.Blur()
+}
+
+func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
+	event, ok := msg.(events.DialogFocus)
+	return event, ok
 }
