@@ -54,7 +54,7 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	model, dialogCmd := m.dialog.Update(msg)
 	m.dialog = model.(*dialog.Component)
 
-	return m, tea.Sequence(
+	return m, tea.Batch(
 		chatListCmd,
 		dialogCmd,
 	)
