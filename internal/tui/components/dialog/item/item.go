@@ -38,7 +38,7 @@ func NewItem(message Message, width int) Item {
 func (i Item) View() string {
 	s := i.style.Render(
 		i.Content,
-		i.timeStyle.Render(i.SendTime.Format("04:05")),
+		i.timeStyle.Render(i.SendTime.Format("15:04")),
 	)
 
 	if i.IsFromMe {
