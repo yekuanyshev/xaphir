@@ -182,6 +182,7 @@ func (c *Component) Focus() {
 
 func (c *Component) Blur() {
 	c.Component.Blur()
+	c.input.SetValue("")
 }
 
 func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
