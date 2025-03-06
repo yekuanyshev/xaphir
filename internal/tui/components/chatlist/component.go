@@ -5,7 +5,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
@@ -16,15 +16,12 @@ type Component struct {
 	items     []item.Item
 	paginator *Paginator[item.Item]
 
-	dialog *dialog.Component
-
 	style      lipgloss.Style
 	titleStyle lipgloss.Style
 }
 
 func NewComponent(
 	chats []item.Chat,
-	dialog *dialog.Component,
 ) *Component {
 	items := utils.SliceMap(chats, func(chat item.Chat) item.Item {
 		return item.NewItem(chat)
@@ -33,8 +30,6 @@ func NewComponent(
 
 	return &Component{
 		Component: base.NewComponent(),
-
-		dialog: dialog,
 
 		style: lipgloss.NewStyle().
 			PaddingLeft(1).PaddingRight(1).
@@ -58,6 +53,11 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if c.isFocusCMD(msg) {
+		c.Focus()
+		return c, nil
+	}
+
 	if !c.Focused() {
 		return c, nil
 	}
@@ -75,14 +75,18 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.paginator.SkipToNextPage()
 		case "left":
 			c.paginator.SkipToPrevPage()
+		case "enter":
+			c.Blur()
+			currentItem := c.paginator.CurrentItem()
+			return c, events.DialogFocusCMD(
+				currentItem.Username,
+				currentItem.Messages,
+			)
 		}
 	}
 
 	c.items[previousItemIdx].SetSelected(false)
 	c.items[c.paginator.CurrentIndex()].SetSelected(true)
-
-	c.dialog.SetTitle(c.paginator.CurrentItem().Username)
-	c.dialog.SetItems(c.paginator.CurrentItem().Messages)
 
 	return c, nil
 }
@@ -138,4 +142,9 @@ func (c *Component) itemsView() string {
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, items...)
+}
+
+func (c *Component) isFocusCMD(msg tea.Msg) bool {
+	_, ok := msg.(events.ChatListFocus)
+	return ok
 }

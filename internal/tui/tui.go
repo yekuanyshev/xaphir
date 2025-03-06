@@ -24,7 +24,7 @@ func Run(ctx context.Context) {
 	}
 
 	dialog := dialog.NewComponent()
-	chatList := chatlist.NewComponent(stubs.Chats, dialog)
+	chatList := chatlist.NewComponent(stubs.Chats)
 	main := components.NewMain(chatList, dialog)
 
 	p := tea.NewProgram(

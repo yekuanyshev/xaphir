@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
@@ -56,8 +57,24 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if msg, ok := c.isFocusCMD(msg); ok {
+		c.SetTitle(msg.Title)
+		c.SetItems(msg.Items)
+		c.Focus()
+		return c, nil
+	}
+
 	if !c.Focused() {
 		return c, nil
+	}
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			c.Blur()
+			return c, events.ChatListFocusCMD()
+		}
 	}
 
 	return c, nil
@@ -139,4 +156,15 @@ func (c *Component) itemsView() string {
 		lipgloss.Left,
 		items...,
 	)
+}
+
+func (c *Component) Blur() {
+	c.Component.Blur()
+	c.SetTitle("")
+	c.SetItems(nil)
+}
+
+func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
+	event, ok := msg.(events.DialogFocus)
+	return event, ok
 }
