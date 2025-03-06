@@ -1,6 +1,8 @@
 package dialog
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -74,10 +76,24 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			c.Blur()
 			return c, events.ChatListFocusCMD()
+		case "enter":
+			message := item.Message{
+				Content:  c.input.Value(),
+				SendTime: time.Now(),
+				IsFromMe: true,
+			}
+			w := c.style.GetWidth() - c.style.GetHorizontalFrameSize()
+			c.items = append(c.items, item.NewItem(message, w))
+			c.input.SetValue("")
 		}
 	}
 
-	return c, nil
+	var inputCMD tea.Cmd
+	c.input, inputCMD = c.input.Update(msg)
+
+	return c, tea.Batch(
+		inputCMD,
+	)
 }
 
 func (c *Component) View() string {
