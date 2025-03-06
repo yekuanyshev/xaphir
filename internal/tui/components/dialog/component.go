@@ -99,7 +99,7 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.items = append(c.items, item.NewItem(message, c.InnerWidth()))
 			c.input.SetValue("")
 			c.end = len(c.items)
-			c.start = c.calculateStart(c.end - 1)
+			c.start = c.calculateStart(max(c.end-1, 0))
 		case "down":
 			// ignore if component shows all messages
 			if c.end != len(c.items) {
@@ -170,7 +170,7 @@ func (c *Component) SetItems(items []item.Message) {
 		return item.NewItem(message, c.InnerWidth())
 	})
 	c.end = len(c.items)
-	c.start = c.calculateStart(c.end - 1)
+	c.start = c.calculateStart(max(c.end-1, 0))
 }
 
 func (c *Component) itemsView() string {
