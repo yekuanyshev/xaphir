@@ -97,6 +97,12 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
+	c.style = c.style.Width(c.Width()).Height(c.Height())
+	c.inputStyle = c.inputStyle.Width(
+		c.style.GetWidth() - c.style.GetHorizontalFrameSize() - c.inputStyle.GetHorizontalFrameSize(),
+	)
+	c.input.Width = c.inputStyle.GetWidth()
+
 	if !c.Focused() {
 		return c.style.Render(
 			lipgloss.Place(
@@ -107,10 +113,6 @@ func (c *Component) View() string {
 			),
 		)
 	}
-
-	c.style = c.style.Width(c.Width()).Height(c.Height())
-	c.inputStyle = c.inputStyle.Width(c.style.GetWidth() - c.style.GetHorizontalFrameSize() - 2)
-	c.input.Width = c.inputStyle.GetWidth()
 
 	var sections []string
 	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()

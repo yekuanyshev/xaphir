@@ -92,6 +92,9 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
+	c.style = c.style.Width(c.Width()).Height(c.Height())
+	c.paginator.SetWidth(c.Width() - c.style.GetHorizontalFrameSize())
+
 	if c.Focused() {
 		c.style = c.style.Faint(false)
 		c.titleStyle = c.titleStyle.Faint(false)
@@ -99,9 +102,6 @@ func (c *Component) View() string {
 		c.style = c.style.Faint(true)
 		c.titleStyle = c.titleStyle.Faint(true)
 	}
-
-	c.style = c.style.Width(c.Width()).Height(c.Height())
-	c.paginator.SetWidth(c.Width() - c.style.GetHorizontalFrameSize())
 
 	var sections []string
 	availHeight := c.style.GetHeight() - c.style.GetVerticalFrameSize()
