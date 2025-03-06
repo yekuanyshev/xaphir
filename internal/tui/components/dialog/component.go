@@ -81,14 +81,15 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	if c.Focused() {
-		c.style = c.style.Faint(false)
-		c.titleStyle = c.titleStyle.Faint(false)
-		c.input.Focus()
-	} else {
-		c.style = c.style.Faint(true)
-		c.titleStyle = c.titleStyle.Faint(true)
-		c.input.Blur()
+	if !c.Focused() {
+		return c.style.Render(
+			lipgloss.Place(
+				c.Width()-c.style.GetHorizontalFrameSize(),
+				c.Height()-c.style.GetVerticalFrameSize(),
+				lipgloss.Center, lipgloss.Center,
+				lipgloss.NewStyle().Faint(true).Render("Select a chat to start messaging..."),
+			),
+		)
 	}
 
 	c.style = c.style.Width(c.Width()).Height(c.Height())
@@ -158,10 +159,13 @@ func (c *Component) itemsView() string {
 	)
 }
 
+func (c *Component) Focus() {
+	c.Component.Focus()
+	c.input.Focus()
+}
+
 func (c *Component) Blur() {
 	c.Component.Blur()
-	c.SetTitle("")
-	c.SetItems(nil)
 }
 
 func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
