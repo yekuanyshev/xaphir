@@ -91,8 +91,13 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.Blur()
 			return c, events.ChatListFocusCMD()
 		case "enter":
+			inputValue := c.input.Value()
+			if inputValue == "" {
+				return c, nil
+			}
+
 			message := item.Message{
-				Content:  c.input.Value(),
+				Content:  inputValue,
 				SendTime: time.Now(),
 				IsFromMe: true,
 			}
@@ -224,7 +229,9 @@ func (c *Component) calculateStart(end int) int {
 	i := end
 
 	for i > 0 {
-		h += lipgloss.Height(c.items[i].View())
+		itemViewHeight := lipgloss.Height(c.items[i].View())
+
+		h += itemViewHeight
 		if h >= availHeight {
 			return i + 1
 		}
