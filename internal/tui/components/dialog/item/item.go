@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 type Message struct {
@@ -26,7 +27,6 @@ func NewItem(message Message, width int) Item {
 		width:   width,
 
 		style: lipgloss.NewStyle().
-			MaxWidth(width / 2).
 			PaddingLeft(1).PaddingRight(1).
 			BorderStyle(lipgloss.RoundedBorder()),
 
@@ -36,8 +36,11 @@ func NewItem(message Message, width int) Item {
 }
 
 func (i Item) View() string {
+	w := i.width/2 - i.style.GetHorizontalFrameSize()
+	content := ansi.Wrap(i.Content, w, "")
+
 	s := i.style.Render(
-		i.Content,
+		content,
 		i.timeStyle.Render(i.SendTime.Format("15:04")),
 	)
 
