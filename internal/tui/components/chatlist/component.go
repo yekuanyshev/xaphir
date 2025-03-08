@@ -22,9 +22,7 @@ type Component struct {
 func NewComponent(
 	chats []item.Chat,
 ) *Component {
-	items := utils.SliceMap(chats, func(chat item.Chat) item.Item {
-		return item.NewItem(chat)
-	})
+	items := utils.SliceMap(chats, item.NewItem)
 	paginatorLimit := 15
 	paginator := NewPaginator(paginator.NewItemPaginator(items, paginatorLimit))
 
