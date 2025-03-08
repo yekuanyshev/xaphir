@@ -69,6 +69,7 @@ func NewComponent() *Component {
 func (c *Component) SetWidth(width int) {
 	c.Component.SetWidth(width)
 	c.slider.SetWidth(c.InnerWidth())
+	c.inputStyle = c.inputStyle.Width(c.InnerWidth() - c.inputStyle.GetHorizontalFrameSize())
 }
 
 func (c *Component) SetHeight(height int) {
@@ -132,9 +133,6 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	c.inputStyle = c.inputStyle.Width(c.InnerWidth() - c.inputStyle.GetHorizontalFrameSize())
-	c.input.Width = c.inputStyle.GetWidth()
-
 	if !c.Focused() {
 		return c.Render(
 			lipgloss.Place(
