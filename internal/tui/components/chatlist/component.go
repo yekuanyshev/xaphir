@@ -130,15 +130,17 @@ func (c *Component) View() string {
 }
 
 func (c *Component) itemsView() string {
-	itemsOnPage := c.paginator.ItemsOnCurrentPage()
+	itemViews := utils.SliceMap(
+		c.paginator.ItemsOnCurrentPage(),
+		func(item item.Item) string {
+			return item.View(c.InnerWidth())
+		},
+	)
 
-	items := make([]string, 0, len(itemsOnPage))
-
-	for _, chatItem := range itemsOnPage {
-		items = append(items, chatItem.View(c.InnerWidth()))
-	}
-
-	return lipgloss.JoinVertical(lipgloss.Left, items...)
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		itemViews...,
+	)
 }
 
 func (c *Component) isFocusCMD(msg tea.Msg) bool {
