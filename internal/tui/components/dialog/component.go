@@ -18,9 +18,7 @@ type Component struct {
 	title        string
 	blurredTitle string
 
-	start int
-	end   int
-	items []item.Item
+	slider *Slider
 
 	input textinput.Model
 
@@ -60,12 +58,27 @@ func NewComponent() *Component {
 		Component:         base.NewComponent(base.WithStyle(style)),
 		title:             "",
 		blurredTitle:      blurredTitle,
-		items:             nil,
+		slider:            NewSlider(),
 		input:             input,
 		titleStyle:        titleStyle,
 		blurredTitleStyle: blurredTitleStyle,
 		inputStyle:        inputStyle,
 	}
+}
+
+func (c *Component) SetWidth(width int) {
+	c.Component.SetWidth(width)
+	c.slider.SetWidth(c.InnerWidth())
+}
+
+func (c *Component) SetHeight(height int) {
+	c.Component.SetHeight(height)
+
+	sliderAvailableHeight := c.InnerHeight() -
+		lipgloss.Height(c.titleStyle.Render(c.title)) -
+		lipgloss.Height(c.inputStyle.Render(c.input.View()))
+
+	c.slider.SetHeight(sliderAvailableHeight)
 }
 
 func (c *Component) Init() tea.Cmd {
@@ -75,7 +88,7 @@ func (c *Component) Init() tea.Cmd {
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if msg, ok := c.isFocusCMD(msg); ok {
 		c.SetTitle(msg.Title)
-		c.SetItems(msg.Items)
+		c.slider.SetMessages(msg.Items)
 		c.Focus()
 		return c, nil
 	}
@@ -101,18 +114,12 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				SendTime: time.Now(),
 				IsFromMe: true,
 			}
-			c.items = append(c.items, item.NewItem(message, c.InnerWidth()))
+			c.slider.AppendMessage(message)
 			c.input.SetValue("")
-			c.end = len(c.items)
-			c.start = c.calculateStart(max(c.end-1, 0))
 		case "down":
-			if c.end < len(c.items) {
-				c.end = min(c.end+1, len(c.items))
-				c.start = c.calculateStart(c.end - 1)
-			}
+			c.slider.Increment()
 		case "up":
-			c.end = max(c.end-1, c.end-c.start)
-			c.start = c.calculateStart(c.end - 1)
+			c.slider.Decrement()
 		}
 	}
 
@@ -169,17 +176,9 @@ func (c *Component) SetTitle(title string) {
 	c.title = title
 }
 
-func (c *Component) SetItems(items []item.Message) {
-	c.items = utils.SliceMap(items, func(message item.Message) item.Item {
-		return item.NewItem(message, c.InnerWidth())
-	})
-	c.end = len(c.items)
-	c.start = c.calculateStart(max(c.end-1, 0))
-}
-
 func (c *Component) itemsView() string {
 	itemViews := utils.SliceMap(
-		c.items[c.start:c.end],
+		c.slider.GetItems(),
 		func(item item.Item) string {
 			return item.View()
 		},
@@ -204,32 +203,4 @@ func (c *Component) Blur() {
 func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
 	event, ok := msg.(events.DialogFocus)
 	return event, ok
-}
-
-func (c *Component) getMessagesAvailableHeight() int {
-	return c.InnerHeight() -
-		lipgloss.Height(c.titleStyle.Render(c.title)) -
-		lipgloss.Height(c.inputStyle.Render(c.input.View()))
-}
-
-func (c *Component) calculateStart(end int) int {
-	if end <= 0 {
-		return 0
-	}
-
-	availHeight := c.getMessagesAvailableHeight()
-	h := 0
-	i := end
-
-	for i >= 0 {
-		itemViewHeight := lipgloss.Height(c.items[i].View())
-
-		if h+itemViewHeight >= availHeight {
-			return i + 1
-		}
-		h += itemViewHeight
-		i--
-	}
-
-	return max(i, 0)
 }
