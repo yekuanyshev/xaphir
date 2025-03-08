@@ -49,5 +49,8 @@ func (i Item) View() string {
 	}
 
 	return lipgloss.PlaceHorizontal(i.width, lipgloss.Left, s)
+}
 
+func (i *Item) SetWidth(width int) {
+	i.width = width
 }
