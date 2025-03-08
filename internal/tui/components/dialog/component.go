@@ -106,14 +106,13 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.end = len(c.items)
 			c.start = c.calculateStart(max(c.end-1, 0))
 		case "down":
-			// ignore if component shows all messages
-			if c.end != len(c.items) {
-				c.start = min(c.start+1, c.end-c.start-1)
+			if c.end < len(c.items) {
 				c.end = min(c.end+1, len(c.items))
+				c.start = c.calculateStart(c.end - 1)
 			}
 		case "up":
-			c.start = max(c.start-1, 0)
 			c.end = max(c.end-1, c.end-c.start)
+			c.start = c.calculateStart(c.end - 1)
 		}
 	}
 
@@ -179,22 +178,12 @@ func (c *Component) SetItems(items []item.Message) {
 }
 
 func (c *Component) itemsView() string {
-	availHeight := c.getMessagesAvailableHeight()
-	itemViews := make([]string, 0, 20)
-	h := 0
-
-	for i := c.start; i < c.end; i++ {
-		itemView := c.items[i].View()
-		itemViews = append(itemViews, itemView)
-
-		h += lipgloss.Height(itemView)
-
-		if h >= availHeight {
-			itemViews = itemViews[:len(itemViews)-1]
-			c.end = i
-			break
-		}
-	}
+	itemViews := utils.SliceMap(
+		c.items[c.start:c.end],
+		func(item item.Item) string {
+			return item.View()
+		},
+	)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -224,19 +213,23 @@ func (c *Component) getMessagesAvailableHeight() int {
 }
 
 func (c *Component) calculateStart(end int) int {
+	if end <= 0 {
+		return 0
+	}
+
 	availHeight := c.getMessagesAvailableHeight()
 	h := 0
 	i := end
 
-	for i > 0 {
+	for i >= 0 {
 		itemViewHeight := lipgloss.Height(c.items[i].View())
 
-		h += itemViewHeight
-		if h >= availHeight {
+		if h+itemViewHeight >= availHeight {
 			return i + 1
 		}
+		h += itemViewHeight
 		i--
 	}
 
-	return i
+	return max(i, 0)
 }
