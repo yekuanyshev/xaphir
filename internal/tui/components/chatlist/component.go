@@ -13,6 +13,7 @@ import (
 type Component struct {
 	*base.Component
 
+	title     string
 	items     []item.Item
 	paginator *Paginator[item.Item]
 
@@ -40,6 +41,7 @@ func NewComponent(
 
 	return &Component{
 		Component:  base.NewComponent(base.WithStyle(style)),
+		title:      "Chats",
 		items:      items,
 		paginator:  paginator,
 		titleStyle: titleStyle,
@@ -103,7 +105,7 @@ func (c *Component) View() string {
 	var sections []string
 	availHeight := c.InnerHeight()
 
-	titleView := c.titleStyle.Render("Chats")
+	titleView := c.titleStyle.Render(c.title)
 	sections = append(sections, titleView)
 	availHeight -= lipgloss.Height(titleView)
 
