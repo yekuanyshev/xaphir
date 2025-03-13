@@ -1,6 +1,8 @@
 package paginator
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestPaginatorInitialization(t *testing.T) {
 	p := NewPaginator(100, 10)
@@ -133,5 +135,35 @@ func TestTotalPages(t *testing.T) {
 	p = NewPaginator(101, 10)
 	if p.TotalPages() != 11 {
 		t.Errorf("expected total pages to be 11, got %d", p.TotalPages())
+	}
+}
+
+func TestSetLimit(t *testing.T) {
+	p := NewPaginator(95, 10)
+	if p.total != 95 {
+		t.Errorf("expected total to be 95, got %d", p.total)
+	}
+	if p.limit != 10 {
+		t.Errorf("expected limit to be 10, got %d", p.limit)
+	}
+	if p.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", p.page)
+	}
+	if p.totalPages != 10 {
+		t.Errorf("expected total pages to be 10, got %d", p.totalPages)
+	}
+
+	p.SetLimit(20)
+	if p.total != 95 {
+		t.Errorf("expected total to be 100, got %d", p.total)
+	}
+	if p.limit != 20 {
+		t.Errorf("expected limit to be 20, got: %d", p.limit)
+	}
+	if p.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", p.page)
+	}
+	if p.totalPages != 5 {
+		t.Errorf("expected total pages to be 5, got %d", p.totalPages)
 	}
 }

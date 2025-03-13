@@ -15,8 +15,14 @@ func NewCursorPaginator(total, limit int) *CursorPaginator {
 func (cp *CursorPaginator) Increment() {
 	cp.cursor++
 	if cp.cursor >= cp.limit {
+		if cp.OnLastPage() {
+			cp.cursor--
+			return
+		}
+
 		cp.NextPage()
 		cp.cursor = 0
+		return
 	}
 
 	n := cp.NumOfItemsOnPage()
@@ -54,4 +60,9 @@ func (cp *CursorPaginator) SkipToPrevPage() {
 
 func (cp *CursorPaginator) Cursor() int {
 	return cp.cursor
+}
+
+func (cp *CursorPaginator) SetLimit(limit int) {
+	cp.Paginator.SetLimit(limit)
+	cp.cursor = 0
 }

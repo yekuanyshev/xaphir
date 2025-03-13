@@ -84,3 +84,36 @@ func TestCursorPaginatorBoundaryConditions(t *testing.T) {
 		t.Errorf("expected cursor at first item of first page, got page %d, cursor %d", cp.page, cp.cursor)
 	}
 }
+
+func TestCursorPaginatorSetLimit(t *testing.T) {
+	cp := NewCursorPaginator(100, 10)
+	if cp.total != 100 {
+		t.Errorf("expected total to be 100, got %d", cp.total)
+	}
+	if cp.limit != 10 {
+		t.Errorf("expected limit to be 10, got %d", cp.limit)
+	}
+	if cp.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", cp.page)
+	}
+	if cp.cursor != 0 {
+		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
+	}
+
+	cp.SetLimit(20)
+	if cp.total != 100 {
+		t.Errorf("expected total to be 100, got %d", cp.total)
+	}
+	if cp.limit != 20 {
+		t.Errorf("expected limit to be 20, got %d", cp.limit)
+	}
+	if cp.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", cp.page)
+	}
+	if cp.totalPages != 5 {
+		t.Errorf("expected total pages to be 5, got %d", cp.totalPages)
+	}
+	if cp.cursor != 0 {
+		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
+	}
+}
