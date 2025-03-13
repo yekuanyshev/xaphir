@@ -24,8 +24,7 @@ func NewComponent(
 	chats []item.Chat,
 ) *Component {
 	items := utils.SliceMap(chats, item.NewItem)
-	paginatorLimit := 15
-	paginator := NewPaginator(paginator.NewItemPaginator(items, paginatorLimit))
+	paginator := NewPaginator(paginator.NewItemPaginator(items, 1))
 
 	style := lipgloss.NewStyle().
 		PaddingLeft(1).PaddingRight(1).
@@ -91,9 +90,20 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c *Component) View() string {
+func (c *Component) SetWidth(width int) {
+	c.Component.SetWidth(width)
 	c.paginator.SetWidth(c.InnerWidth())
+}
 
+func (c *Component) SetHeight(height int) {
+	c.Component.SetHeight(height)
+	c.paginator.SetLimit(c.calculateLimit())
+	for i := range c.items {
+		c.items[i].SetSelected(false)
+	}
+}
+
+func (c *Component) View() string {
 	if c.Focused() {
 		c.SetStyle(c.Style().Faint(false))
 		c.titleStyle = c.titleStyle.Faint(false)
@@ -146,4 +156,27 @@ func (c *Component) itemsView() string {
 func (c *Component) isFocusCMD(msg tea.Msg) bool {
 	_, ok := msg.(events.ChatListFocus)
 	return ok
+}
+
+func (c *Component) calculateLimit() int {
+	availHeight := c.getItemsAvailableHeight()
+	h := 0
+	num := 0
+
+	for _, item := range c.items {
+		viewHeight := lipgloss.Height(item.View(c.InnerWidth()))
+		if h+viewHeight >= availHeight {
+			return num
+		}
+		h += viewHeight
+		num++
+	}
+
+	return num
+}
+
+func (c *Component) getItemsAvailableHeight() int {
+	return c.InnerHeight() -
+		lipgloss.Height(c.titleStyle.Render(c.title)) -
+		lipgloss.Height(c.paginator.View())
 }
