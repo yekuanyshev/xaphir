@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 )
 
 type Main struct {
@@ -29,6 +30,17 @@ func (m *Main) Init() tea.Cmd {
 }
 
 func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if events.IsChatListFocusCMD(msg) {
+		m.chatList.Focus()
+		return m, nil
+	}
+
+	if msg, ok := events.IsDialogFocusCMD(msg); ok {
+		m.dialog.SetTitle(msg.Title)
+		m.dialog.SetSliderMessages(msg.Items)
+		m.dialog.Focus()
+		return m, nil
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:

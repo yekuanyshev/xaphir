@@ -1,16 +1,11 @@
 package dialog
 
 import (
-	"time"
-
 	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
-	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Component struct {
@@ -76,113 +71,13 @@ func (c *Component) SetWidth(width int) {
 func (c *Component) SetHeight(height int) {
 	c.Component.SetHeight(height)
 
-	sliderAvailableHeight := c.InnerHeight() -
-		lipgloss.Height(c.titleStyle.Render(c.title)) -
-		lipgloss.Height(c.inputStyle.Render(c.input.View()))
-
-	c.slider.SetHeight(sliderAvailableHeight)
-}
-
-func (c *Component) Init() tea.Cmd {
-	return nil
-}
-
-func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if msg, ok := c.isFocusCMD(msg); ok {
-		c.SetTitle(msg.Title)
-		c.slider.SetMessages(msg.Items)
-		c.Focus()
-		return c, nil
-	}
-
-	if !c.Focused() {
-		return c, nil
-	}
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
-			c.Blur()
-			return c, events.ChatListFocusCMD()
-		case "enter":
-			inputValue := c.input.Value()
-			if inputValue == "" {
-				return c, nil
-			}
-
-			message := item.Message{
-				Content:  inputValue,
-				SendTime: time.Now(),
-				IsFromMe: true,
-			}
-			c.slider.AppendMessage(message)
-			c.input.SetValue("")
-		case "down":
-			c.slider.Increment()
-		case "up":
-			c.slider.Decrement()
-		}
-	}
-
-	var inputCMD tea.Cmd
-	c.input, inputCMD = c.input.Update(msg)
-
-	return c, tea.Batch(
-		inputCMD,
-	)
-}
-
-func (c *Component) View() string {
-	if !c.Focused() {
-		return c.Render(
-			lipgloss.Place(
-				c.InnerWidth(), c.InnerHeight(),
-				lipgloss.Center, lipgloss.Center,
-				c.blurredTitleStyle.Render(c.blurredTitle),
-			),
-		)
-	}
-
-	titleView := c.titleStyle.Render(c.title)
-	itemsView := c.itemsView()
-	inputView := c.inputStyle.Render(c.input.View())
 	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(), titleView, itemsView, inputView,
-	)
-	emptySpace := common.FillWithEmptySpace(availableHeight)
-
-	sections := []string{
-		titleView,
-		emptySpace,
-		itemsView,
-		inputView,
-	}
-
-	return c.Render(
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			sections...,
-		),
-	)
-}
-
-func (c *Component) SetTitle(title string) {
-	c.title = title
-}
-
-func (c *Component) itemsView() string {
-	itemViews := utils.SliceMap(
-		c.slider.GetItems(),
-		func(item item.Item) string {
-			return item.View()
-		},
+		c.InnerHeight(),
+		c.titleStyle.Render(c.title),
+		c.inputStyle.Render(c.input.View()),
 	)
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		itemViews...,
-	)
+	c.slider.SetHeight(availableHeight)
 }
 
 func (c *Component) Focus() {
@@ -195,7 +90,10 @@ func (c *Component) Blur() {
 	c.input.SetValue("")
 }
 
-func (c *Component) isFocusCMD(msg tea.Msg) (events.DialogFocus, bool) {
-	event, ok := msg.(events.DialogFocus)
-	return event, ok
+func (c *Component) SetTitle(title string) {
+	c.title = title
+}
+
+func (c *Component) SetSliderMessages(messages []item.Message) {
+	c.slider.SetMessages(messages)
 }

@@ -14,7 +14,7 @@ type Chat struct {
 
 type Item struct {
 	Chat
-	selected bool
+	focus bool
 
 	style                    lipgloss.Style
 	titleStyle               lipgloss.Style
@@ -49,7 +49,7 @@ func NewItem(chat Chat) Item {
 func (i Item) View(width int) string {
 	i.LastMessage = ansi.Truncate(i.LastMessage, width, "...")
 
-	if i.selected {
+	if i.focus {
 		return i.style.Render(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
@@ -68,6 +68,10 @@ func (i Item) View(width int) string {
 	)
 }
 
-func (i *Item) SetSelected(selected bool) {
-	i.selected = selected
+func (i *Item) Focus() {
+	i.focus = true
+}
+
+func (i *Item) Blur() {
+	i.focus = false
 }

@@ -29,42 +29,13 @@ func (c *Component) SetHeight(height int) {
 	c.style = c.style.Height(height)
 }
 
-func (c *Component) Width() int {
-	return c.width
-}
-
-func (c *Component) Height() int {
-	return c.height
-}
-
-func (c *Component) InnerWidth() int {
-	return c.width - c.style.GetHorizontalFrameSize()
-}
-
-func (c *Component) InnerHeight() int {
-	return c.height - c.style.GetVerticalFrameSize()
-}
-
-func (c *Component) Style() lipgloss.Style {
-	return c.style
-}
-
-func (c *Component) SetStyle(style lipgloss.Style) {
-	c.style = style
-}
-
-func (c *Component) Render(strs ...string) string {
-	return c.style.Render(strs...)
-}
-
-func (c *Component) Focus() {
-	c.focus = true
-}
-
-func (c *Component) Blur() {
-	c.focus = false
-}
-
-func (c *Component) Focused() bool {
-	return c.focus
-}
+func (c *Component) Width() int                    { return c.width }
+func (c *Component) Height() int                   { return c.height }
+func (c *Component) InnerWidth() int               { return c.width - c.style.GetHorizontalFrameSize() }
+func (c *Component) InnerHeight() int              { return c.height - c.style.GetVerticalFrameSize() }
+func (c *Component) Style() lipgloss.Style         { return c.style }
+func (c *Component) SetStyle(style lipgloss.Style) { c.style = style }
+func (c *Component) Render(strs ...string) string  { return c.style.Render(strs...) }
+func (c *Component) Focus()                        { c.focus = true }
+func (c *Component) Blur()                         { c.focus = false }
+func (c *Component) Focused() bool                 { return c.focus }

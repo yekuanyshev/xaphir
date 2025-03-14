@@ -10,9 +10,9 @@ type Paginator[T any] struct {
 	style lipgloss.Style
 }
 
-func NewPaginator[T any](p *paginator.ItemPaginator[T]) *Paginator[T] {
+func NewPaginator[T any](items []T) *Paginator[T] {
 	return &Paginator[T]{
-		ItemPaginator: p,
+		ItemPaginator: paginator.NewItemPaginator(items, len(items)),
 		style: lipgloss.NewStyle().
 			AlignHorizontal(lipgloss.Center),
 	}

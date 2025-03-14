@@ -27,3 +27,13 @@ func ChatListFocusCMD() tea.Cmd {
 		return ChatListFocus{}
 	}
 }
+
+func IsDialogFocusCMD(msg tea.Msg) (DialogFocus, bool) {
+	dialogFocus, ok := msg.(DialogFocus)
+	return dialogFocus, ok
+}
+
+func IsChatListFocusCMD(msg tea.Msg) bool {
+	_, ok := msg.(ChatListFocus)
+	return ok
+}
