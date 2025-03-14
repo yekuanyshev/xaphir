@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
@@ -143,24 +144,20 @@ func (c *Component) View() string {
 		)
 	}
 
-	var sections []string
-	availHeight := c.InnerHeight()
-
 	titleView := c.titleStyle.Render(c.title)
-	sections = append(sections, titleView)
-	availHeight -= lipgloss.Height(titleView)
-
 	itemsView := c.itemsView()
-	availHeight -= lipgloss.Height(itemsView)
-
 	inputView := c.inputStyle.Render(c.input.View())
-	availHeight -= lipgloss.Height(inputView)
+	availableHeight := common.CalculateAvailableHeight(
+		c.InnerHeight(), titleView, itemsView, inputView,
+	)
+	emptySpace := common.FillWithEmptySpace(availableHeight)
 
-	// append empty space
-	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
-	sections = append(sections, itemsView)
-
-	sections = append(sections, inputView)
+	sections := []string{
+		titleView,
+		emptySpace,
+		itemsView,
+		inputView,
+	}
 
 	return c.Render(
 		lipgloss.JoinVertical(

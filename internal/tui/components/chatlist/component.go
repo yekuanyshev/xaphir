@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
@@ -112,24 +113,20 @@ func (c *Component) View() string {
 		c.titleStyle = c.titleStyle.Faint(true)
 	}
 
-	var sections []string
-	availHeight := c.InnerHeight()
-
 	titleView := c.titleStyle.Render(c.title)
-	sections = append(sections, titleView)
-	availHeight -= lipgloss.Height(titleView)
-
 	itemsView := c.itemsView()
-	sections = append(sections, itemsView)
-	availHeight -= lipgloss.Height(itemsView)
-
 	paginatorView := c.paginator.View()
-	availHeight -= lipgloss.Height(paginatorView)
+	availableHeight := common.CalculateAvailableHeight(
+		c.InnerHeight(), titleView, itemsView, paginatorView,
+	)
+	emptySpace := common.FillWithEmptySpace(availableHeight)
 
-	// append empty space
-	sections = append(sections, lipgloss.NewStyle().Height(availHeight).Render(""))
-
-	sections = append(sections, paginatorView)
+	sections := []string{
+		titleView,
+		itemsView,
+		emptySpace,
+		paginatorView,
+	}
 
 	return c.Render(
 		lipgloss.JoinVertical(
