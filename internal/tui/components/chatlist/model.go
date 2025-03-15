@@ -1,6 +1,7 @@
 package chatlist
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
@@ -22,16 +23,16 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "down":
+		switch {
+		case key.Matches(msg, c.keyMap.CursorDown):
 			c.paginator.Increment()
-		case "up":
+		case key.Matches(msg, c.keyMap.CursorUp):
 			c.paginator.Decrement()
-		case "right":
+		case key.Matches(msg, c.keyMap.NextPage):
 			c.paginator.SkipToNextPage()
-		case "left":
+		case key.Matches(msg, c.keyMap.PrevPage):
 			c.paginator.SkipToPrevPage()
-		case "enter":
+		case key.Matches(msg, c.keyMap.GoToDialog):
 			c.Blur()
 			currentItem := c.paginator.CurrentItem()
 			return c, events.DialogFocusCMD(
@@ -71,6 +72,10 @@ func (c *Component) View() string {
 			sections...,
 		),
 	)
+}
+
+func (c *Component) HelpView() string {
+	return c.help.View()
 }
 
 func (c *Component) itemsView() string {

@@ -4,13 +4,19 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
 )
 
 type Main struct {
-	chatList *chatlist.Component
-	dialog   *dialog.Component
+	width  int
+	height int
+
+	chatList         *chatlist.Component
+	dialog           *dialog.Component
+	showChatListHelp bool
+	showDialogHelp   bool
 }
 
 func NewMain(
@@ -47,8 +53,14 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "?":
+			m.toggleChatListHelp()
+			m.toggleDialogHelp()
+			return m, nil
 		}
 	case tea.WindowSizeMsg:
+		m.width, m.height = msg.Width, msg.Height
+
 		chatListWidth := int(float64(msg.Width) * 0.2)
 		dialogWidth := int(float64(msg.Width)*0.8 - 3)
 		height := int(float64(msg.Height) - 2)
@@ -73,9 +85,62 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Main) View() string {
-	return lipgloss.JoinHorizontal(
+	view := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		m.chatList.View(),
 		m.dialog.View(),
 	)
+
+	showHelp := false
+	helpView := ""
+
+	if m.showChatListHelp {
+		showHelp = true
+		helpView = m.chatList.HelpView()
+	}
+
+	if m.showDialogHelp {
+		showHelp = true
+		helpView = m.dialog.HelpView()
+	}
+
+	if showHelp {
+		centerX := m.width / 2
+		centerY := m.height / 2
+		helpViewWidth, helpViewHeight := lipgloss.Size(helpView)
+		x := centerX - helpViewWidth/2
+		y := centerY - helpViewHeight/2
+
+		return common.PlaceOverlay(
+			x, y, helpView, view,
+		)
+	}
+
+	return view
+}
+
+func (m *Main) toggleChatListHelp() {
+	if m.showChatListHelp {
+		m.showChatListHelp = false
+		m.chatList.Focus()
+		return
+	}
+
+	if m.chatList.Focused() {
+		m.showChatListHelp = true
+		m.chatList.Blur()
+	}
+}
+
+func (m *Main) toggleDialogHelp() {
+	if m.showDialogHelp {
+		m.showDialogHelp = false
+		m.dialog.Focus()
+		return
+	}
+
+	if m.dialog.Focused() {
+		m.showDialogHelp = true
+		m.dialog.Blur()
+	}
 }

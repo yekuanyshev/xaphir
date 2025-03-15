@@ -3,6 +3,7 @@ package dialog
 import (
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
@@ -22,11 +23,15 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
+		switch {
+		case key.Matches(msg, c.keyMap.CursorDown):
+			c.slider.Increment()
+		case key.Matches(msg, c.keyMap.CursorUp):
+			c.slider.Decrement()
+		case key.Matches(msg, c.keyMap.BackToChats):
 			c.Blur()
 			return c, events.ChatListFocusCMD()
-		case "enter":
+		case key.Matches(msg, c.keyMap.SendMessage):
 			inputValue := c.input.Value()
 			if inputValue == "" {
 				return c, nil
@@ -39,10 +44,6 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			c.slider.AppendMessage(message)
 			c.input.SetValue("")
-		case "down":
-			c.slider.Increment()
-		case "up":
-			c.slider.Decrement()
 		}
 	}
 
@@ -80,6 +81,10 @@ func (c *Component) View() string {
 			sections...,
 		),
 	)
+}
+
+func (c *Component) HelpView() string {
+	return c.help.View()
 }
 
 func (c *Component) blurredView() string {

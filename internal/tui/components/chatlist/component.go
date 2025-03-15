@@ -5,6 +5,7 @@ import (
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
@@ -16,6 +17,9 @@ type Component struct {
 	paginator *Paginator[item.Item]
 
 	titleStyle lipgloss.Style
+
+	keyMap KeyMap
+	help   *help.Component
 }
 
 func NewComponent(
@@ -36,12 +40,17 @@ func NewComponent(
 		Background(lipgloss.Color("62")).
 		Bold(true)
 
+	keyMap := DefaultKeyMap()
+	help := help.New(keyMap)
+
 	return &Component{
 		Component:  base.NewComponent(base.WithStyle(style)),
 		title:      "Chats",
 		items:      items,
 		paginator:  paginator,
 		titleStyle: titleStyle,
+		keyMap:     keyMap,
+		help:       help,
 	}
 }
 

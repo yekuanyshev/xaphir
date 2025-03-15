@@ -6,6 +6,7 @@ import (
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
 )
 
 type Component struct {
@@ -21,6 +22,9 @@ type Component struct {
 	titleStyle        lipgloss.Style
 	blurredTitleStyle lipgloss.Style
 	inputStyle        lipgloss.Style
+
+	keyMap KeyMap
+	help   *help.Component
 }
 
 func NewComponent() *Component {
@@ -50,6 +54,9 @@ func NewComponent() *Component {
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("36"))
 
+	keyMap := DefaultKeyMap()
+	help := help.New(keyMap)
+
 	return &Component{
 		Component:         base.NewComponent(base.WithStyle(style)),
 		title:             "",
@@ -59,6 +66,8 @@ func NewComponent() *Component {
 		titleStyle:        titleStyle,
 		blurredTitleStyle: blurredTitleStyle,
 		inputStyle:        inputStyle,
+		keyMap:            keyMap,
+		help:              help,
 	}
 }
 
