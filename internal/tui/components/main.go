@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
@@ -17,6 +18,8 @@ type Main struct {
 	dialog           *dialog.Component
 	showChatListHelp bool
 	showDialogHelp   bool
+
+	keyMap KeyMap
 }
 
 func NewMain(
@@ -26,6 +29,7 @@ func NewMain(
 	return &Main{
 		chatList: chatList,
 		dialog:   dialog,
+		keyMap:   DefaultKeyMap(),
 	}
 }
 
@@ -50,10 +54,10 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
+		switch {
+		case key.Matches(msg, m.keyMap.Quit):
 			return m, tea.Quit
-		case "?":
+		case key.Matches(msg, m.keyMap.ToggleHelp):
 			m.toggleChatListHelp()
 			m.toggleDialogHelp()
 			return m, nil
