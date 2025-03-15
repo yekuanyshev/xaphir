@@ -1,6 +1,7 @@
 package dialog
 
 import (
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -29,21 +30,21 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, c.keyMap.CursorUp):
 			c.slider.Decrement()
 		case key.Matches(msg, c.keyMap.BackToChats):
-			c.Blur()
-			return c, events.ChatListFocusCMD()
-		case key.Matches(msg, c.keyMap.SendMessage):
-			inputValue := c.input.Value()
-			if inputValue == "" {
+			if c.IsTypingMessage() {
+				c.inputBlur()
 				return c, nil
 			}
 
-			message := item.Message{
-				Content:  inputValue,
-				SendTime: time.Now(),
-				IsFromMe: true,
+			c.Blur()
+			return c, events.ChatListFocusCMD()
+		case key.Matches(msg, c.keyMap.SendMessage):
+			if !c.IsTypingMessage() {
+				c.inputFocus()
+				return c, nil
 			}
-			c.slider.AppendMessage(message)
-			c.input.SetValue("")
+
+			c.sendMessage()
+			return c, nil
 		}
 	}
 
@@ -109,4 +110,20 @@ func (c *Component) itemsView() string {
 		lipgloss.Left,
 		itemViews...,
 	)
+}
+
+func (c *Component) sendMessage() {
+	inputValue := c.input.Value()
+	inputValue = strings.TrimSpace(inputValue)
+	if inputValue == "" {
+		return
+	}
+
+	message := item.Message{
+		Content:  inputValue,
+		SendTime: time.Now(),
+		IsFromMe: true,
+	}
+	c.slider.AppendMessage(message)
+	c.input.SetValue("")
 }

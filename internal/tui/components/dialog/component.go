@@ -17,7 +17,9 @@ type Component struct {
 
 	slider *Slider
 
-	input textinput.Model
+	input                   textinput.Model
+	focusedInputPlaceholder string
+	blurredInputPlaceholder string
 
 	titleStyle        lipgloss.Style
 	blurredTitleStyle lipgloss.Style
@@ -29,7 +31,9 @@ type Component struct {
 
 func NewComponent() *Component {
 	input := textinput.New()
-	input.Placeholder = "Write a message..."
+	focusedInputPlaceholder := "Write a message..."
+	blurredInputPlaceholder := "Press enter to type a message..."
+	input.Placeholder = blurredInputPlaceholder
 	input.Blur()
 
 	blurredTitle := "Select a chat to start messaging..."
@@ -51,23 +55,24 @@ func NewComponent() *Component {
 
 	inputStyle := lipgloss.NewStyle().
 		PaddingLeft(1).PaddingRight(1).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("36"))
+		BorderStyle(lipgloss.RoundedBorder())
 
 	keyMap := DefaultKeyMap()
 	help := help.New(keyMap)
 
 	return &Component{
-		Component:         base.NewComponent(base.WithStyle(style)),
-		title:             "",
-		blurredTitle:      blurredTitle,
-		slider:            NewSlider(),
-		input:             input,
-		titleStyle:        titleStyle,
-		blurredTitleStyle: blurredTitleStyle,
-		inputStyle:        inputStyle,
-		keyMap:            keyMap,
-		help:              help,
+		Component:               base.NewComponent(base.WithStyle(style)),
+		title:                   "",
+		blurredTitle:            blurredTitle,
+		slider:                  NewSlider(),
+		input:                   input,
+		focusedInputPlaceholder: focusedInputPlaceholder,
+		blurredInputPlaceholder: blurredInputPlaceholder,
+		titleStyle:              titleStyle,
+		blurredTitleStyle:       blurredTitleStyle,
+		inputStyle:              inputStyle,
+		keyMap:                  keyMap,
+		help:                    help,
 	}
 }
 
@@ -89,11 +94,6 @@ func (c *Component) SetHeight(height int) {
 	c.slider.SetHeight(availableHeight)
 }
 
-func (c *Component) Focus() {
-	c.Component.Focus()
-	c.input.Focus()
-}
-
 func (c *Component) Blur() {
 	c.Component.Blur()
 	c.input.SetValue("")
@@ -105,4 +105,20 @@ func (c *Component) SetTitle(title string) {
 
 func (c *Component) SetSliderMessages(messages []item.Message) {
 	c.slider.SetMessages(messages)
+}
+
+func (c *Component) inputFocus() {
+	c.input.Focus()
+	c.input.Placeholder = c.focusedInputPlaceholder
+	c.inputStyle = c.inputStyle.BorderForeground(lipgloss.Color("36"))
+}
+
+func (c *Component) inputBlur() {
+	c.input.Blur()
+	c.input.Placeholder = c.blurredInputPlaceholder
+	c.inputStyle = c.inputStyle.UnsetBorderForeground()
+}
+
+func (c *Component) IsTypingMessage() bool {
+	return c.input.Focused()
 }

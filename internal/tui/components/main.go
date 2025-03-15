@@ -58,9 +58,11 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keyMap.Quit):
 			return m, tea.Quit
 		case key.Matches(msg, m.keyMap.ToggleHelp):
-			m.toggleChatListHelp()
-			m.toggleDialogHelp()
-			return m, nil
+			if !m.dialog.IsTypingMessage() {
+				m.toggleChatListHelp()
+				m.toggleDialogHelp()
+				return m, nil
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
