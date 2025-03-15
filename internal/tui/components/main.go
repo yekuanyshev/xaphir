@@ -51,7 +51,7 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		chatListWidth := int(float64(msg.Width) * 0.2)
 		dialogWidth := int(float64(msg.Width)*0.8 - 3)
-		height := int(float64(msg.Height) * 0.9)
+		height := int(float64(msg.Height) - 2)
 
 		m.chatList.SetWidth(chatListWidth)
 		m.chatList.SetHeight(height)
