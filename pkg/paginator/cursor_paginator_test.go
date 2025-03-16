@@ -1,21 +1,17 @@
 package paginator
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestCursorPaginatorInitialization(t *testing.T) {
 	cp := NewCursorPaginator(100, 10)
-	if cp.total != 100 {
-		t.Errorf("expected total to be 100, got %d", cp.total)
-	}
-	if cp.limit != 10 {
-		t.Errorf("expected limit to be 10, got %d", cp.limit)
-	}
-	if cp.page != 0 {
-		t.Errorf("expected initial page to be 0, got %d", cp.page)
-	}
-	if cp.cursor != 0 {
-		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
-	}
+	assert.Equal(t, 100, cp.total)
+	assert.Equal(t, 10, cp.limit)
+	assert.Equal(t, 0, cp.page)
+	assert.Equal(t, 0, cp.cursor)
 }
 
 func TestCursorPaginatorIncrement(t *testing.T) {
@@ -23,39 +19,32 @@ func TestCursorPaginatorIncrement(t *testing.T) {
 
 	for i := 0; i < 9; i++ {
 		cp.Increment()
-		if cp.cursor != i+1 {
-			t.Errorf("expected cursor to be %d, got %d", i+1, cp.cursor)
-		}
+		assert.Equal(t, i+1, cp.cursor)
 	}
 
 	cp.Increment() // Should move to next page
-	if cp.page != 1 || cp.cursor != 0 {
-		t.Errorf("expected cursor to reset and page to increment, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+	assert.Equal(t, 1, cp.page)
+	assert.Equal(t, 0, cp.cursor)
 }
 
 func TestCursorPaginatorDecrement(t *testing.T) {
 	cp := NewCursorPaginator(25, 10)
 	cp.cursor = 5
 	cp.Decrement()
-	if cp.cursor != 4 {
-		t.Errorf("expected cursor to be 4, got %d", cp.cursor)
-	}
+	assert.Equal(t, 4, cp.cursor)
 
 	cp.cursor = 0
 	cp.Decrement() // Should not move to last item on prev page
-	if cp.cursor != 0 || cp.page != 0 {
-		t.Errorf("expected cursor to be 9 on previous page, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+	assert.Equal(t, 0, cp.cursor)
+	assert.Equal(t, 0, cp.page)
 }
 
 func TestCursorPaginatorSkipToNextPage(t *testing.T) {
 	cp := NewCursorPaginator(50, 10)
 	cp.cursor = 5
 	cp.SkipToNextPage()
-	if cp.cursor != 0 || cp.page != 1 {
-		t.Errorf("expected cursor to reset and page to be 1, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+	assert.Equal(t, 0, cp.cursor)
+	assert.Equal(t, 1, cp.page)
 }
 
 func TestCursorPaginatorSkipToPrevPage(t *testing.T) {
@@ -63,9 +52,8 @@ func TestCursorPaginatorSkipToPrevPage(t *testing.T) {
 	cp.page = 2
 	cp.cursor = 7
 	cp.SkipToPrevPage()
-	if cp.cursor != 0 || cp.page != 1 {
-		t.Errorf("expected cursor to reset and page to be 1, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+	assert.Equal(t, 0, cp.cursor)
+	assert.Equal(t, 1, cp.page)
 }
 
 func TestCursorPaginatorBoundaryConditions(t *testing.T) {
@@ -73,80 +61,46 @@ func TestCursorPaginatorBoundaryConditions(t *testing.T) {
 	for i := 0; i < 25; i++ {
 		cp.Increment()
 	}
-	if cp.cursor != 4 || cp.page != 2 {
-		t.Errorf("expected cursor at last item of last page, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+
+	assert.Equal(t, 4, cp.cursor)
+	assert.Equal(t, 2, cp.page)
 
 	for i := 0; i < 25; i++ {
 		cp.Decrement()
 	}
-	if cp.cursor != 0 || cp.page != 0 {
-		t.Errorf("expected cursor at first item of first page, got page %d, cursor %d", cp.page, cp.cursor)
-	}
+
+	assert.Equal(t, 0, cp.cursor)
+	assert.Equal(t, 0, cp.page)
 }
 
 func TestCursorPaginatorSetLimit(t *testing.T) {
 	cp := NewCursorPaginator(100, 10)
-	if cp.total != 100 {
-		t.Errorf("expected total to be 100, got %d", cp.total)
-	}
-	if cp.limit != 10 {
-		t.Errorf("expected limit to be 10, got %d", cp.limit)
-	}
-	if cp.page != 0 {
-		t.Errorf("expected initial page to be 0, got %d", cp.page)
-	}
-	if cp.cursor != 0 {
-		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
-	}
+	assert.Equal(t, 100, cp.total)
+	assert.Equal(t, 10, cp.limit)
+	assert.Equal(t, 0, cp.page)
+	assert.Equal(t, 10, cp.totalPages)
+	assert.Equal(t, 0, cp.cursor)
 
 	cp.SetLimit(20)
-	if cp.total != 100 {
-		t.Errorf("expected total to be 100, got %d", cp.total)
-	}
-	if cp.limit != 20 {
-		t.Errorf("expected limit to be 20, got %d", cp.limit)
-	}
-	if cp.page != 0 {
-		t.Errorf("expected initial page to be 0, got %d", cp.page)
-	}
-	if cp.totalPages != 5 {
-		t.Errorf("expected total pages to be 5, got %d", cp.totalPages)
-	}
-	if cp.cursor != 0 {
-		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
-	}
+	assert.Equal(t, 100, cp.total)
+	assert.Equal(t, 20, cp.limit)
+	assert.Equal(t, 0, cp.page)
+	assert.Equal(t, 5, cp.totalPages)
+	assert.Equal(t, 0, cp.cursor)
 }
 
 func TestCursorPaginatorSetTotal(t *testing.T) {
 	cp := NewCursorPaginator(100, 10)
-	if cp.total != 100 {
-		t.Errorf("expected total to be 100, got %d", cp.total)
-	}
-	if cp.limit != 10 {
-		t.Errorf("expected limit to be 10, got %d", cp.limit)
-	}
-	if cp.page != 0 {
-		t.Errorf("expected initial page to be 0, got %d", cp.page)
-	}
-	if cp.cursor != 0 {
-		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
-	}
+	assert.Equal(t, 100, cp.total)
+	assert.Equal(t, 10, cp.limit)
+	assert.Equal(t, 0, cp.page)
+	assert.Equal(t, 10, cp.totalPages)
+	assert.Equal(t, 0, cp.cursor)
 
 	cp.SetTotal(50)
-	if cp.total != 50 {
-		t.Errorf("expected total to be 50, got %d", cp.total)
-	}
-	if cp.limit != 10 {
-		t.Errorf("expected limit to be 10, got %d", cp.limit)
-	}
-	if cp.page != 0 {
-		t.Errorf("expected initial page to be 0, got %d", cp.page)
-	}
-	if cp.totalPages != 5 {
-		t.Errorf("expected total pages to be 5, got %d", cp.totalPages)
-	}
-	if cp.cursor != 0 {
-		t.Errorf("expected initial cursor to be 0, got %d", cp.cursor)
-	}
+	assert.Equal(t, 50, cp.total)
+	assert.Equal(t, 10, cp.limit)
+	assert.Equal(t, 0, cp.page)
+	assert.Equal(t, 5, cp.totalPages)
+	assert.Equal(t, 0, cp.cursor)
 }
