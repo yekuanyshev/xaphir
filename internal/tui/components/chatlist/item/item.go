@@ -68,10 +68,16 @@ func (i Item) View(width int) string {
 	)
 }
 
-func (i *Item) Focus() {
+func (i Item) Focus() Item {
 	i.focus = true
+	return i
 }
 
-func (i *Item) Blur() {
+func (i Item) Blur() Item {
 	i.focus = false
+	return i
+}
+
+func ItemEquals(item1, item2 Item) bool {
+	return item1.Username == item2.Username
 }

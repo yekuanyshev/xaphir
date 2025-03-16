@@ -3,12 +3,14 @@ package chatlist
 import "github.com/charmbracelet/bubbles/key"
 
 type KeyMap struct {
-	CursorUp   key.Binding
-	CursorDown key.Binding
-	NextPage   key.Binding
-	PrevPage   key.Binding
-	GoToDialog key.Binding
-	ToggleHelp key.Binding
+	CursorUp    key.Binding
+	CursorDown  key.Binding
+	NextPage    key.Binding
+	PrevPage    key.Binding
+	GoToDialog  key.Binding
+	ShowSearch  key.Binding
+	CloseSearch key.Binding
+	ToggleHelp  key.Binding
 }
 
 func DefaultKeyMap() KeyMap {
@@ -33,6 +35,14 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "go to dialog"),
 		),
+		ShowSearch: key.NewBinding(
+			key.WithKeys("/"),
+			key.WithHelp("/", "search chat"),
+		),
+		CloseSearch: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("esc", "close chat searching"),
+		),
 		ToggleHelp: key.NewBinding(
 			key.WithKeys("?"),
 			key.WithHelp("?", "show/close help"),
@@ -47,6 +57,8 @@ func (km KeyMap) ShortHelp() []key.Binding {
 		km.NextPage,
 		km.PrevPage,
 		km.GoToDialog,
+		km.ShowSearch,
+		km.CloseSearch,
 		km.ToggleHelp,
 	}
 }
@@ -59,6 +71,8 @@ func (km KeyMap) FullHelp() [][]key.Binding {
 			km.NextPage,
 			km.PrevPage,
 			km.GoToDialog,
+			km.ShowSearch,
+			km.CloseSearch,
 			km.ToggleHelp,
 		},
 	}

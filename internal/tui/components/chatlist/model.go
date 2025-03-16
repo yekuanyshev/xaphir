@@ -19,48 +19,75 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 	}
 
+	var cmds []tea.Cmd
+
+	if c.filtering {
+		previousFilteredItems := c.filterItems()
+		var cmd tea.Cmd
+		c.filterInput, cmd = c.filterInput.Update(msg)
+		cmds = append(cmds, cmd)
+		c.applyFiltering(previousFilteredItems)
+	}
+
 	previousItemIdx := c.paginator.CurrentIndex()
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, c.keyMap.CursorDown):
+		case key.Matches(msg, c.keyMap.CursorDown) && !c.paginator.IsEmpty():
 			c.paginator.Increment()
-		case key.Matches(msg, c.keyMap.CursorUp):
+		case key.Matches(msg, c.keyMap.CursorUp) && !c.paginator.IsEmpty():
 			c.paginator.Decrement()
-		case key.Matches(msg, c.keyMap.NextPage):
+		case key.Matches(msg, c.keyMap.NextPage) && !c.paginator.IsEmpty():
 			c.paginator.SkipToNextPage()
-		case key.Matches(msg, c.keyMap.PrevPage):
+		case key.Matches(msg, c.keyMap.PrevPage) && !c.paginator.IsEmpty():
 			c.paginator.SkipToPrevPage()
-		case key.Matches(msg, c.keyMap.GoToDialog):
+		case key.Matches(msg, c.keyMap.GoToDialog) && !c.paginator.IsEmpty():
 			c.Blur()
 			currentItem := c.paginator.CurrentItem()
 			return c, events.DialogFocusCMD(
 				currentItem.Username,
 				currentItem.Messages,
 			)
+		case key.Matches(msg, c.keyMap.ShowSearch):
+			c.enableFiltering()
+		case key.Matches(msg, c.keyMap.CloseSearch) && c.filtering:
+			c.disableFiltering()
 		}
 	}
 
 	currentItemIdx := c.paginator.CurrentIndex()
 
-	c.items[previousItemIdx].Blur()
-	c.items[currentItemIdx].Focus()
+	if !c.paginator.IsEmpty() {
+		previousItem := c.paginator.ItemByIndex(previousItemIdx)
+		currentItem := c.paginator.ItemByIndex(currentItemIdx)
+		c.paginator.SetItemOn(previousItemIdx, previousItem.Blur())
+		c.paginator.SetItemOn(currentItemIdx, currentItem.Focus())
+	}
 
-	return c, nil
+	return c, tea.Batch(cmds...)
 }
 
 func (c *Component) View() string {
 	titleView := c.titleStyle.Render(c.title)
+	headerView := titleView
+
+	if c.filtering {
+		filterInputView := c.filterInputStyle.Render(
+			c.filterInput.View(),
+		)
+		headerView = filterInputView
+	}
+
 	itemsView := c.itemsView()
 	paginatorView := c.paginator.View()
 	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(), titleView, itemsView, paginatorView,
+		c.InnerHeight(), headerView, itemsView, paginatorView,
 	)
 	emptySpace := common.FillWithEmptySpace(availableHeight)
 
 	sections := []string{
-		titleView,
+		headerView,
 		itemsView,
 		emptySpace,
 		paginatorView,
