@@ -24,3 +24,20 @@ func (p *ItemPaginator[T]) CurrentItem() T {
 func (p *ItemPaginator[T]) CurrentIndex() int {
 	return p.page*p.limit + p.cursor
 }
+
+func (p *ItemPaginator[T]) SetItems(items []T) {
+	p.items = items
+	p.SetTotal(len(items))
+}
+
+func (p *ItemPaginator[T]) SetItemOn(idx int, item T) {
+	p.items[idx] = item
+}
+
+func (p *ItemPaginator[T]) ItemByIndex(idx int) T {
+	return p.items[idx]
+}
+
+func (p *ItemPaginator[T]) IsEmpty() bool {
+	return len(p.items) == 0
+}

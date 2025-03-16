@@ -66,3 +66,9 @@ func (p *Paginator) SetLimit(limit int) {
 	p.page = 0
 	p.totalPages = int(math.Ceil(float64(p.total) / float64(limit)))
 }
+
+func (p *Paginator) SetTotal(total int) {
+	p.total = total
+	p.page = 0
+	p.totalPages = int(math.Ceil(float64(p.total) / float64(p.limit)))
+}

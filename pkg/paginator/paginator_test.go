@@ -167,3 +167,33 @@ func TestSetLimit(t *testing.T) {
 		t.Errorf("expected total pages to be 5, got %d", p.totalPages)
 	}
 }
+
+func TestSetTotal(t *testing.T) {
+	p := NewPaginator(95, 10)
+	if p.total != 95 {
+		t.Errorf("expected total to be 95, got %d", p.total)
+	}
+	if p.limit != 10 {
+		t.Errorf("expected limit to be 10, got %d", p.limit)
+	}
+	if p.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", p.page)
+	}
+	if p.totalPages != 10 {
+		t.Errorf("expected total pages to be 10, got %d", p.totalPages)
+	}
+
+	p.SetTotal(50)
+	if p.total != 50 {
+		t.Errorf("expected total to be 50, got %d", p.total)
+	}
+	if p.limit != 10 {
+		t.Errorf("expected limit to be 20, got: %d", p.limit)
+	}
+	if p.page != 0 {
+		t.Errorf("expected initial page to be 0, got %d", p.page)
+	}
+	if p.totalPages != 5 {
+		t.Errorf("expected total pages to be 5, got %d", p.totalPages)
+	}
+}

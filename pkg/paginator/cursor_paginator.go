@@ -66,3 +66,8 @@ func (cp *CursorPaginator) SetLimit(limit int) {
 	cp.Paginator.SetLimit(limit)
 	cp.cursor = 0
 }
+
+func (cp *CursorPaginator) SetTotal(total int) {
+	cp.Paginator.SetTotal(total)
+	cp.cursor = 0
+}
