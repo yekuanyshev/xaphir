@@ -22,5 +22,17 @@ func Load() (Stubs, error) {
 		return stub, err
 	}
 
+	for i := range stub.Chats {
+		chat := stub.Chats[i]
+		messages := chat.Messages
+		for j := range messages {
+			messages[j].ChatID = chat.ID
+
+			if j == len(messages)-1 {
+				stub.Chats[i].LastMessage = &messages[j]
+			}
+		}
+	}
+
 	return stub, nil
 }
