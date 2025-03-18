@@ -14,7 +14,7 @@ func NewPaginator(total, limit int) *Paginator {
 		total:      total,
 		limit:      limit,
 		page:       0,
-		totalPages: int(math.Ceil(float64(total) / float64(limit))),
+		totalPages: calculateTotalPages(total, limit),
 	}
 }
 
@@ -64,11 +64,19 @@ func (p *Paginator) TotalPages() int {
 func (p *Paginator) SetLimit(limit int) {
 	p.limit = limit
 	p.page = 0
-	p.totalPages = int(math.Ceil(float64(p.total) / float64(limit)))
+	p.totalPages = calculateTotalPages(p.total, p.limit)
 }
 
 func (p *Paginator) SetTotal(total int) {
 	p.total = total
 	p.page = 0
-	p.totalPages = int(math.Ceil(float64(p.total) / float64(p.limit)))
+	p.totalPages = calculateTotalPages(p.total, p.limit)
+}
+
+func calculateTotalPages(total, limit int) int {
+	if limit <= 0 {
+		return 0
+	}
+
+	return int(math.Ceil(float64(total) / float64(limit)))
 }

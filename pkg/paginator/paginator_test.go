@@ -119,6 +119,12 @@ func TestSetLimit(t *testing.T) {
 	assert.Equal(t, 20, p.limit)
 	assert.Equal(t, 0, p.page)
 	assert.Equal(t, 5, p.totalPages)
+
+	p.SetLimit(0)
+	assert.Equal(t, 95, p.total)
+	assert.Equal(t, 0, p.limit)
+	assert.Equal(t, 0, p.page)
+	assert.Equal(t, 0, p.totalPages)
 }
 
 func TestSetTotal(t *testing.T) {
