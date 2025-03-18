@@ -3,6 +3,7 @@ package dialog
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
@@ -21,24 +22,11 @@ func NewSlider() *Slider {
 
 func (s *Slider) SetWidth(width int) {
 	s.width = width
-	for i := range s.items {
-		s.items[i].SetWidth(width)
-	}
 }
 func (s *Slider) SetHeight(height int) { s.height = height }
 
-func (s *Slider) SetMessages(messages []item.Message) {
-	converter := func(message item.Message) item.Item {
-		return item.NewItem(message, s.width)
-	}
-	s.items = utils.SliceMap(messages, converter)
-	s.end = len(s.items)
-	s.start = s.calculateStart(max(s.end-1, 0))
-}
-
-func (s *Slider) AppendMessage(message item.Message) {
-	item := item.NewItem(message, s.width)
-	s.items = append(s.items, item)
+func (s *Slider) SetMessages(messages []models.ChatMessage) {
+	s.items = utils.SliceMap(messages, item.NewItem)
 	s.end = len(s.items)
 	s.start = s.calculateStart(max(s.end-1, 0))
 }
@@ -69,7 +57,7 @@ func (s *Slider) calculateStart(end int) int {
 	i := end
 
 	for i >= 0 {
-		itemViewHeight := lipgloss.Height(s.items[i].View())
+		itemViewHeight := lipgloss.Height(s.items[i].View(s.width))
 
 		if h+itemViewHeight >= availHeight {
 			return i + 1

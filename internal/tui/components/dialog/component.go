@@ -5,12 +5,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 )
 
 type Component struct {
 	*base.Component
+
+	chatID int64
 
 	title        string
 	blurredTitle string
@@ -103,8 +105,12 @@ func (c *Component) SetTitle(title string) {
 	c.title = title
 }
 
-func (c *Component) SetSliderMessages(messages []item.Message) {
+func (c *Component) SetSliderMessages(messages []models.ChatMessage) {
 	c.slider.SetMessages(messages)
+}
+
+func (c *Component) SetChatID(chatID int64) {
+	c.chatID = chatID
 }
 
 func (c *Component) inputFocus() {

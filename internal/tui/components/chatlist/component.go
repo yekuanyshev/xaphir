@@ -10,6 +10,7 @@ import (
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
@@ -30,12 +31,7 @@ type Component struct {
 	filterInputStyle lipgloss.Style
 }
 
-func NewComponent(
-	chats []item.Chat,
-) *Component {
-	items := utils.SliceMap(chats, item.NewItem)
-	paginator := NewPaginator(items)
-
+func NewComponent() *Component {
 	style := lipgloss.NewStyle().
 		PaddingLeft(1).PaddingRight(1).
 		BorderStyle(lipgloss.RoundedBorder()).
@@ -61,8 +57,8 @@ func NewComponent(
 	return &Component{
 		Component:        base.NewComponent(base.WithStyle(style)),
 		title:            "Chats",
-		items:            items,
-		paginator:        paginator,
+		items:            nil,
+		paginator:        nil,
 		titleStyle:       titleStyle,
 		keyMap:           keyMap,
 		help:             help,
@@ -100,6 +96,13 @@ func (c *Component) Blur() {
 	c.titleStyle = c.titleStyle.Faint(true)
 }
 
+func (c *Component) SetItems(chats []models.Chat) {
+	c.items = utils.SliceMap(chats, item.NewItem)
+	c.paginator = NewPaginator(c.items)
+	c.paginator.SetItems(c.items)
+	c.paginator.SetLimit(c.calculateLimit())
+}
+
 func (c *Component) calculateLimit() int {
 	availableHeight := common.CalculateAvailableHeight(
 		c.InnerHeight(),
@@ -127,7 +130,7 @@ func (c *Component) applyFiltering(previousFilteredItems []item.Item) {
 	if !slices.EqualFunc(
 		previousFilteredItems,
 		filteredItems,
-		item.ItemEquals,
+		func(item1, item2 item.Item) bool { return item1.ID == item2.ID },
 	) {
 		c.paginator.SetItems(filteredItems)
 	}
@@ -165,6 +168,6 @@ func (c *Component) filterItems() []item.Item {
 
 func (c *Component) blurItems() {
 	for i := range c.items {
-		c.items[i] = c.items[i].Blur()
+		c.items[i].Blur()
 	}
 }

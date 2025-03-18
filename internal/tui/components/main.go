@@ -1,18 +1,24 @@
 package components
 
 import (
+	"log"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/yekuanyshev/xaphir/internal/service"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
+	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Main struct {
 	width  int
 	height int
+
+	srv *service.Service
 
 	chatList         *chatlist.Component
 	dialog           *dialog.Component
@@ -23,10 +29,12 @@ type Main struct {
 }
 
 func NewMain(
+	srv *service.Service,
 	chatList *chatlist.Component,
 	dialog *dialog.Component,
 ) *Main {
 	return &Main{
+		srv:      srv,
 		chatList: chatList,
 		dialog:   dialog,
 		keyMap:   DefaultKeyMap(),
@@ -34,24 +42,20 @@ func NewMain(
 }
 
 func (m *Main) Init() tea.Cmd {
+	chats, err := m.srv.ListChats()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	items := utils.SliceMap(chats, service.Chat.ToComponentModel)
+
+	m.chatList.SetItems(items)
 	m.chatList.Focus()
 	m.dialog.Blur()
 	return nil
 }
 
 func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if events.IsChatListFocusCMD(msg) {
-		m.chatList.Focus()
-		return m, nil
-	}
-
-	if msg, ok := events.IsDialogFocusCMD(msg); ok {
-		m.dialog.SetTitle(msg.Title)
-		m.dialog.SetSliderMessages(msg.Items)
-		m.dialog.Focus()
-		return m, nil
-	}
-
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -76,6 +80,15 @@ func (m *Main) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.dialog.SetWidth(dialogWidth)
 		m.dialog.SetHeight(height)
+	case events.ChatListFocus:
+		m.chatList.Focus()
+		return m, nil
+	case events.DialogFocus:
+		m.handleDialogFocus(msg)
+		return m, nil
+	case events.SendMessage:
+		m.handleSendMessage(msg)
+		return m, nil
 	}
 
 	model, chatListCmd := m.chatList.Update(msg)
@@ -123,6 +136,36 @@ func (m *Main) View() string {
 	}
 
 	return view
+}
+
+func (m *Main) handleDialogFocus(msg events.DialogFocus) {
+	chat, err := m.srv.GetChat(msg.ChatID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	items := utils.SliceMap(chat.Messages, service.ChatMessage.ToComponentModel)
+
+	m.dialog.SetChatID(msg.ChatID)
+	m.dialog.SetTitle(chat.Member.Username)
+	m.dialog.SetSliderMessages(items)
+	m.dialog.Focus()
+}
+
+func (m *Main) handleSendMessage(msg events.SendMessage) {
+	err := m.srv.SendMessage(msg.ChatID, msg.Content)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	chat, err := m.srv.GetChat(msg.ChatID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	items := utils.SliceMap(chat.Messages, service.ChatMessage.ToComponentModel)
+
+	m.dialog.SetSliderMessages(items)
 }
 
 func (m *Main) toggleChatListHelp() {

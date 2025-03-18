@@ -4,23 +4,23 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
+	"github.com/yekuanyshev/xaphir/internal/service"
 )
 
 //go:embed stubs.json
 var stubsFile []byte
 
 type Stubs struct {
-	Chats []item.Chat `json:"chats"`
+	Chats []service.Chat
 }
 
 func Load() (Stubs, error) {
-	var stubs Stubs
+	var stub Stubs
 
-	err := json.Unmarshal(stubsFile, &stubs)
+	err := json.Unmarshal(stubsFile, &stub.Chats)
 	if err != nil {
-		return stubs, err
+		return stub, err
 	}
 
-	return stubs, nil
+	return stub, nil
 }

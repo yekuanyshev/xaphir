@@ -2,7 +2,6 @@ package dialog
 
 import (
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -43,8 +42,13 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return c, nil
 			}
 
-			c.sendMessage()
-			return c, nil
+			inputValue := strings.TrimSpace(c.input.Value())
+			if inputValue == "" {
+				return c, nil
+			}
+
+			c.input.SetValue("")
+			return c, events.SendMessageCMD(c.chatID, inputValue)
 		}
 	}
 
@@ -102,7 +106,7 @@ func (c *Component) itemsView() string {
 	itemViews := utils.SliceMap(
 		c.slider.GetItems(),
 		func(item item.Item) string {
-			return item.View()
+			return item.View(c.InnerWidth())
 		},
 	)
 
@@ -110,20 +114,4 @@ func (c *Component) itemsView() string {
 		lipgloss.Left,
 		itemViews...,
 	)
-}
-
-func (c *Component) sendMessage() {
-	inputValue := c.input.Value()
-	inputValue = strings.TrimSpace(inputValue)
-	if inputValue == "" {
-		return
-	}
-
-	message := item.Message{
-		Content:  inputValue,
-		SendTime: time.Now(),
-		IsFromMe: true,
-	}
-	c.slider.AppendMessage(message)
-	c.input.SetValue("")
 }

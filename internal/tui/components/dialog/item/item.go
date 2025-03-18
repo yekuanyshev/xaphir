@@ -1,39 +1,21 @@
 package item
 
 import (
-	"time"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 )
-
-type MessageStatus int
-
-const (
-	MessageStatusUnknown = iota
-	MessageStatusSent
-	MessageStatusRead
-)
-
-type Message struct {
-	Content  string
-	SendTime time.Time
-	IsFromMe bool
-	Status   int
-}
 
 type Item struct {
-	Message
-	width int
+	models.ChatMessage
 
 	style     lipgloss.Style
 	timeStyle lipgloss.Style
 }
 
-func NewItem(message Message, width int) Item {
+func NewItem(message models.ChatMessage) Item {
 	return Item{
-		Message: message,
-		width:   width,
+		ChatMessage: message,
 
 		style: lipgloss.NewStyle().
 			PaddingLeft(1).PaddingRight(1).
@@ -44,16 +26,16 @@ func NewItem(message Message, width int) Item {
 	}
 }
 
-func (i Item) View() string {
-	w := i.width/2 - i.style.GetHorizontalFrameSize()
+func (i Item) View(width int) string {
+	w := width/2 - i.style.GetHorizontalFrameSize()
 	content := ansi.Wrap(i.Content, w, "")
 
 	status := ""
-	switch i.Status {
-	case MessageStatusUnknown:
-	case MessageStatusSent:
+	switch {
+	case i.IsStatusUnknown():
+	case i.IsStatusSent():
 		status = lipgloss.NewStyle().Faint(true).Render("✔✔")
-	case MessageStatusRead:
+	case i.IsStatusRead():
 		status = lipgloss.NewStyle().Faint(false).Render("✔✔")
 	}
 
@@ -64,12 +46,8 @@ func (i Item) View() string {
 	)
 
 	if i.IsFromMe {
-		return lipgloss.PlaceHorizontal(i.width, lipgloss.Right, s)
+		return lipgloss.PlaceHorizontal(width, lipgloss.Right, s)
 	}
 
-	return lipgloss.PlaceHorizontal(i.width, lipgloss.Left, s)
-}
-
-func (i *Item) SetWidth(width int) {
-	i.width = width
+	return lipgloss.PlaceHorizontal(width, lipgloss.Left, s)
 }

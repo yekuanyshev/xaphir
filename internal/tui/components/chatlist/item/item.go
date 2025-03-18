@@ -3,17 +3,11 @@ package item
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 )
 
-type Chat struct {
-	Username    string
-	LastMessage string
-	Messages    []item.Message
-}
-
 type Item struct {
-	Chat
+	models.Chat
 	focus bool
 
 	style                    lipgloss.Style
@@ -23,7 +17,7 @@ type Item struct {
 	selectedDescriptionStyle lipgloss.Style
 }
 
-func NewItem(chat Chat) Item {
+func NewItem(chat models.Chat) Item {
 	return Item{
 		Chat: chat,
 
@@ -68,16 +62,5 @@ func (i Item) View(width int) string {
 	)
 }
 
-func (i Item) Focus() Item {
-	i.focus = true
-	return i
-}
-
-func (i Item) Blur() Item {
-	i.focus = false
-	return i
-}
-
-func ItemEquals(item1, item2 Item) bool {
-	return item1.Username == item2.Username
-}
+func (i *Item) Focus() { i.focus = true }
+func (i *Item) Blur()  { i.focus = false }

@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/yekuanyshev/xaphir/internal/service"
 	"github.com/yekuanyshev/xaphir/internal/stubs"
 	"github.com/yekuanyshev/xaphir/internal/tui/components"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist"
@@ -23,9 +24,11 @@ func Run(ctx context.Context) {
 		log.Fatal(err)
 	}
 
-	dialog := dialog.NewComponent()
-	chatList := chatlist.NewComponent(stubs.Chats)
-	main := components.NewMain(chatList, dialog)
+	main := components.NewMain(
+		service.NewService(stubs.Chats),
+		chatlist.NewComponent(),
+		dialog.NewComponent(),
+	)
 
 	p := tea.NewProgram(
 		main,

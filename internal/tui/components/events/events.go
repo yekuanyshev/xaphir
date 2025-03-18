@@ -2,23 +2,22 @@ package events
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 )
 
 type (
 	DialogFocus struct {
-		Title string
-		Items []item.Message
+		ChatID int64
 	}
 	ChatListFocus struct{}
+	SendMessage   struct {
+		ChatID  int64
+		Content string
+	}
 )
 
-func DialogFocusCMD(title string, items []item.Message) tea.Cmd {
+func DialogFocusCMD(chatID int64) tea.Cmd {
 	return func() tea.Msg {
-		return DialogFocus{
-			Title: title,
-			Items: items,
-		}
+		return DialogFocus{ChatID: chatID}
 	}
 }
 
@@ -28,12 +27,11 @@ func ChatListFocusCMD() tea.Cmd {
 	}
 }
 
-func IsDialogFocusCMD(msg tea.Msg) (DialogFocus, bool) {
-	dialogFocus, ok := msg.(DialogFocus)
-	return dialogFocus, ok
-}
-
-func IsChatListFocusCMD(msg tea.Msg) bool {
-	_, ok := msg.(ChatListFocus)
-	return ok
+func SendMessageCMD(chatID int64, content string) tea.Cmd {
+	return func() tea.Msg {
+		return SendMessage{
+			ChatID:  chatID,
+			Content: content,
+		}
+	}
 }

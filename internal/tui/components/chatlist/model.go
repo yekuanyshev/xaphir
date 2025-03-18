@@ -22,11 +22,8 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	if c.filtering {
-		previousFilteredItems := c.filterItems()
-		var cmd tea.Cmd
-		c.filterInput, cmd = c.filterInput.Update(msg)
+		cmd := c.handleFiltering(msg)
 		cmds = append(cmds, cmd)
-		c.applyFiltering(previousFilteredItems)
 	}
 
 	previousItemIdx := c.paginator.CurrentIndex()
@@ -45,10 +42,7 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, c.keyMap.GoToDialog) && !c.paginator.IsEmpty():
 			c.Blur()
 			currentItem := c.paginator.CurrentItem()
-			return c, events.DialogFocusCMD(
-				currentItem.Username,
-				currentItem.Messages,
-			)
+			return c, events.DialogFocusCMD(currentItem.ID)
 		case key.Matches(msg, c.keyMap.ShowSearch):
 			c.enableFiltering()
 		case key.Matches(msg, c.keyMap.CloseSearch) && c.filtering:
@@ -61,8 +55,10 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if !c.paginator.IsEmpty() {
 		previousItem := c.paginator.ItemByIndex(previousItemIdx)
 		currentItem := c.paginator.ItemByIndex(currentItemIdx)
-		c.paginator.SetItemOn(previousItemIdx, previousItem.Blur())
-		c.paginator.SetItemOn(currentItemIdx, currentItem.Focus())
+		previousItem.Blur()
+		currentItem.Focus()
+		c.paginator.SetItemOn(previousItemIdx, previousItem)
+		c.paginator.SetItemOn(currentItemIdx, currentItem)
 	}
 
 	return c, tea.Batch(cmds...)
@@ -117,4 +113,16 @@ func (c *Component) itemsView() string {
 		lipgloss.Left,
 		itemViews...,
 	)
+}
+
+func (c *Component) handleFiltering(msg tea.Msg) tea.Cmd {
+	var cmd tea.Cmd
+
+	previousFilteredItems := c.filterItems()
+
+	c.filterInput, cmd = c.filterInput.Update(msg)
+
+	c.applyFiltering(previousFilteredItems)
+
+	return cmd
 }
