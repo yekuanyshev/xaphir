@@ -47,6 +47,25 @@ func (c Chat) ToComponentModel() models.Chat {
 	}
 }
 
+func (c Chat) HasLastMessage() bool {
+	return c.LastMessage != nil
+}
+
+func (c Chat) CompareByLastMessageSentTime(q Chat) int {
+	var cSentTime time.Time
+	var qSentTime time.Time
+
+	if c.HasLastMessage() {
+		cSentTime = c.LastMessage.SentTime
+	}
+
+	if q.HasLastMessage() {
+		qSentTime = q.LastMessage.SentTime
+	}
+
+	return cSentTime.Compare(qSentTime)
+}
+
 func (cm ChatMessage) ToComponentModel() models.ChatMessage {
 	return models.ChatMessage{
 		Content:  cm.Content,

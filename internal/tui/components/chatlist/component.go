@@ -98,22 +98,15 @@ func (c *Component) Blur() {
 
 func (c *Component) SetItems(chats []models.Chat) {
 	c.items = utils.SliceMap(chats, item.NewItem)
-	c.paginator = NewPaginator(c.items)
-	c.paginator.SetItems(c.items)
-	c.paginator.SetLimit(c.calculateLimit())
-}
-
-func (c *Component) UpdateItemOn(idx int, chat models.Chat) {
-	c.items[idx] = item.NewItem(chat)
-}
-
-func (c *Component) GetItemIdxByChatID(chatID int64) int {
-	for i, item := range c.items {
-		if item.Chat.ID == chatID {
-			return i
-		}
+	if c.paginator == nil {
+		c.paginator = NewPaginator(c.items)
+		c.paginator.SetWidth(c.InnerWidth())
+		c.paginator.SetLimit(c.calculateLimit())
 	}
-	return -1
+	c.paginator.SetItems(c.items)
+	if len(c.items) > 0 {
+		c.items[0].Focus()
+	}
 }
 
 func (c *Component) calculateLimit() int {
