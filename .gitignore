@@ -28,4 +28,3 @@ go.work.sum
 .idea/
 bin/
 
-internal/stubs/stubs.json
