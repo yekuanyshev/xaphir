@@ -166,6 +166,10 @@ func (m *Main) handleSendMessage(msg events.SendMessage) {
 	items := utils.SliceMap(chat.Messages, service.ChatMessage.ToComponentModel)
 
 	m.dialog.SetSliderMessages(items)
+	m.chatList.UpdateItemOn(
+		m.chatList.GetItemIdxByChatID(msg.ChatID),
+		chat.ToComponentModel(),
+	)
 }
 
 func (m *Main) toggleChatListHelp() {

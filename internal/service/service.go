@@ -52,6 +52,7 @@ func (s *Service) SendMessage(chatID int64, content string) error {
 	}
 
 	chat.Messages = append(chat.Messages, message)
+	chat.LastMessage = &message
 
 	s.chatsMap[chatID] = chat
 

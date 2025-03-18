@@ -103,6 +103,19 @@ func (c *Component) SetItems(chats []models.Chat) {
 	c.paginator.SetLimit(c.calculateLimit())
 }
 
+func (c *Component) UpdateItemOn(idx int, chat models.Chat) {
+	c.items[idx] = item.NewItem(chat)
+}
+
+func (c *Component) GetItemIdxByChatID(chatID int64) int {
+	for i, item := range c.items {
+		if item.Chat.ID == chatID {
+			return i
+		}
+	}
+	return -1
+}
+
 func (c *Component) calculateLimit() int {
 	availableHeight := common.CalculateAvailableHeight(
 		c.InnerHeight(),
