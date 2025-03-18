@@ -30,9 +30,14 @@ type (
 )
 
 func (c Chat) ToComponentModel() models.Chat {
-	lastMessage := ""
+	var lastMessage *models.ChatMessage
 	if c.LastMessage != nil {
-		lastMessage = c.LastMessage.Content
+		lastMessage = &models.ChatMessage{
+			Content:  c.LastMessage.Content,
+			SendTime: c.LastMessage.SentTime,
+			IsFromMe: false,                       // todo: after authorization module
+			Status:   models.MessageStatusUnknown, // todo: after message status feature
+		}
 	}
 
 	return models.Chat{

@@ -16,7 +16,7 @@ type (
 	Chat struct {
 		ID          int64
 		Username    string
-		LastMessage string
+		LastMessage *ChatMessage
 	}
 
 	ChatMessage struct {

@@ -41,14 +41,18 @@ func NewItem(chat models.Chat) Item {
 }
 
 func (i Item) View(width int) string {
-	i.LastMessage = ansi.Truncate(i.LastMessage, width, "...")
+	var lastMessageContent string
+
+	if i.LastMessage != nil {
+		lastMessageContent = ansi.Truncate(i.LastMessage.Content, width, "...")
+	}
 
 	if i.focus {
 		return i.style.Render(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
 				i.selectedTitleStyle.Render(i.Username),
-				i.selectedDescriptionStyle.Render(i.LastMessage),
+				i.selectedDescriptionStyle.Render(lastMessageContent),
 			),
 		)
 	}
@@ -57,7 +61,7 @@ func (i Item) View(width int) string {
 		lipgloss.JoinVertical(
 			lipgloss.Left,
 			i.titleStyle.Render(i.Username),
-			i.descriptionStyle.Render(i.LastMessage),
+			i.descriptionStyle.Render(lastMessageContent),
 		),
 	)
 }
