@@ -8,3 +8,6 @@ build:
 
 test:
 	@go test -v -count=1 ./...
+
+linter:
+	golangci-lint run

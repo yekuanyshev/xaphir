@@ -1,0 +1,27 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocyclo
+    - dupl
+    - gosec
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gocyclo
+        - dupl
+        - gosec
+
+run:
+  timeout: 1m
+  relative-path-mode: gomod
+  tests: false
+  go: "1.24"
