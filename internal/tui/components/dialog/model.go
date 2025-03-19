@@ -71,7 +71,7 @@ func (c *Component) View() string {
 	availableHeight := common.CalculateAvailableHeight(
 		c.InnerHeight(), titleView, itemsView, inputView,
 	)
-	emptySpace := common.FillWithEmptySpace(availableHeight)
+	emptySpace := common.VerticalGap(availableHeight)
 
 	sections := []string{
 		titleView,

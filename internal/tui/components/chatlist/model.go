@@ -80,7 +80,7 @@ func (c *Component) View() string {
 	availableHeight := common.CalculateAvailableHeight(
 		c.InnerHeight(), headerView, itemsView, paginatorView,
 	)
-	emptySpace := common.FillWithEmptySpace(availableHeight)
+	emptySpace := common.VerticalGap(availableHeight)
 
 	sections := []string{
 		headerView,

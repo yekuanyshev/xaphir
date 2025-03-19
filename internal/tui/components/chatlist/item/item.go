@@ -59,7 +59,7 @@ func (i Item) View(width int) string {
 		i.lastMessageTimeStyle.Render(lastMessageSentTime),
 	)
 
-	emptySpace := lipgloss.NewStyle().Width(availableWidth).Render("")
+	emptySpace := common.HorizontalGap(availableWidth)
 
 	if i.focus {
 		return i.style.Render(

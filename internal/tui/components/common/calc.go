@@ -18,6 +18,10 @@ func CalculateAvailableWidth(width int, views ...string) int {
 	return availableWidth
 }
 
-func FillWithEmptySpace(height int) string {
-	return lipgloss.NewStyle().Height(height).Render("")
+func VerticalGap(height int) string {
+	return lipgloss.NewStyle().Height(height).Render()
+}
+
+func HorizontalGap(width int) string {
+	return lipgloss.NewStyle().Width(width).Render()
 }
