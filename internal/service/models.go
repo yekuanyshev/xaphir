@@ -34,7 +34,7 @@ func (c Chat) ToComponentModel() models.Chat {
 	if c.LastMessage != nil {
 		lastMessage = &models.ChatMessage{
 			Content:  c.LastMessage.Content,
-			SendTime: c.LastMessage.SentTime,
+			SentTime: c.LastMessage.SentTime,
 			IsFromMe: false,                       // todo: after authorization module
 			Status:   models.MessageStatusUnknown, // todo: after message status feature
 		}
@@ -69,7 +69,7 @@ func (c Chat) CompareByLastMessageSentTime(q Chat) int {
 func (cm ChatMessage) ToComponentModel() models.ChatMessage {
 	return models.ChatMessage{
 		Content:  cm.Content,
-		SendTime: cm.SentTime,
+		SentTime: cm.SentTime,
 		IsFromMe: false,
 		Status:   models.MessageStatusUnknown,
 	}

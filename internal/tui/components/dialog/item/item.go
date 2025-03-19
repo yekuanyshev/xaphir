@@ -41,7 +41,7 @@ func (i Item) View(width int) string {
 
 	s := i.style.Render(
 		content,
-		i.timeStyle.Render(i.SendTime.Format("15:04")),
+		i.timeStyle.Render(i.SentTime.Format("15:04")),
 		status,
 	)
 

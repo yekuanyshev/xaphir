@@ -21,7 +21,7 @@ type (
 
 	ChatMessage struct {
 		Content  string
-		SendTime time.Time
+		SentTime time.Time
 		IsFromMe bool
 		Status   MessageStatus
 	}
