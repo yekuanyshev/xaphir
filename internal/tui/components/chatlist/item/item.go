@@ -3,6 +3,7 @@ package item
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 )
 
@@ -15,6 +16,7 @@ type Item struct {
 	descriptionStyle         lipgloss.Style
 	selectedTitleStyle       lipgloss.Style
 	selectedDescriptionStyle lipgloss.Style
+	lastMessageTimeStyle     lipgloss.Style
 }
 
 func NewItem(chat models.Chat) Item {
@@ -37,21 +39,38 @@ func NewItem(chat models.Chat) Item {
 
 		selectedDescriptionStyle: lipgloss.NewStyle().
 			Faint(true),
+
+		lastMessageTimeStyle: lipgloss.NewStyle().Faint(true),
 	}
 }
 
 func (i Item) View(width int) string {
 	var lastMessageContent string
+	var lastMessageSentTime string
 
 	if i.LastMessage != nil {
 		lastMessageContent = ansi.Truncate(i.LastMessage.Content, width, "...")
+		lastMessageSentTime = i.LastMessage.FormatSentTime()
 	}
+
+	availableWidth := common.CalculateAvailableWidth(
+		width,
+		i.selectedTitleStyle.Render(i.Username),
+		i.lastMessageTimeStyle.Render(lastMessageSentTime),
+	)
+
+	emptySpace := lipgloss.NewStyle().Width(availableWidth).Render("")
 
 	if i.focus {
 		return i.style.Render(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				i.selectedTitleStyle.Render(i.Username),
+				lipgloss.JoinHorizontal(
+					lipgloss.Top,
+					i.selectedTitleStyle.Render(i.Username),
+					emptySpace,
+					i.lastMessageTimeStyle.Render(lastMessageSentTime),
+				),
 				i.selectedDescriptionStyle.Render(lastMessageContent),
 			),
 		)
@@ -60,7 +79,12 @@ func (i Item) View(width int) string {
 	return i.style.Render(
 		lipgloss.JoinVertical(
 			lipgloss.Left,
-			i.titleStyle.Render(i.Username),
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				i.titleStyle.Render(i.Username),
+				emptySpace,
+				i.lastMessageTimeStyle.Render(lastMessageSentTime),
+			),
 			i.descriptionStyle.Render(lastMessageContent),
 		),
 	)

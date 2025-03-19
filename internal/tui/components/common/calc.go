@@ -10,6 +10,14 @@ func CalculateAvailableHeight(height int, views ...string) int {
 	return availableHeight
 }
 
+func CalculateAvailableWidth(width int, views ...string) int {
+	availableWidth := width
+	for _, view := range views {
+		availableWidth -= lipgloss.Width(view)
+	}
+	return availableWidth
+}
+
 func FillWithEmptySpace(height int) string {
 	return lipgloss.NewStyle().Height(height).Render("")
 }
