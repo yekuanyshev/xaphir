@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	usernameRegex = `^[A-Za-z0-9_]{6,32}$`
-	passwordRegex = `^[A-Za-z0-9_]{6,32}$`
+	usernameRegex = `^[A-Za-z0-9_]{6,32}$` //nolint:gosec
+	passwordRegex = `^[A-Za-z0-9_]{6,32}$` //nolint:gosec
 )
 
 var (
