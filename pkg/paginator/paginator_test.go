@@ -1,6 +1,7 @@
 package paginator
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -139,4 +140,23 @@ func TestSetTotal(t *testing.T) {
 	assert.Equal(t, 10, p.limit)
 	assert.Equal(t, 0, p.page)
 	assert.Equal(t, 5, p.totalPages)
+}
+
+func TestString(t *testing.T) {
+	p := NewPaginator(100, 10)
+	dots := make([]string, 0, p.TotalPages())
+	for range p.TotalPages() {
+		dots = append(dots, inactiveDot)
+	}
+
+	for page := range p.TotalPages() {
+		dots[page] = activeDot
+
+		expected := strings.Join(dots, "")
+
+		assert.Equal(t, expected, p.String())
+		p.NextPage()
+
+		dots[page] = inactiveDot
+	}
 }

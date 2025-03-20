@@ -2,6 +2,11 @@ package paginator
 
 import "math"
 
+const (
+	activeDot   = "○"
+	inactiveDot = "•"
+)
+
 type Paginator struct {
 	total      int // total number of items
 	limit      int // number of items per page
@@ -71,6 +76,19 @@ func (p *Paginator) SetTotal(total int) {
 	p.total = total
 	p.page = 0
 	p.totalPages = calculateTotalPages(p.total, p.limit)
+}
+
+func (p *Paginator) String() string {
+	view := ""
+	for page := range p.TotalPages() {
+		if page == p.CurrentPage() {
+			view += activeDot
+		} else {
+			view += inactiveDot
+		}
+	}
+
+	return view
 }
 
 func calculateTotalPages(total, limit int) int {
