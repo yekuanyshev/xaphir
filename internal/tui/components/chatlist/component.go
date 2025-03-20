@@ -97,6 +97,10 @@ func (c *Component) Blur() {
 }
 
 func (c *Component) SetItems(chats []models.Chat) {
+	if c.filtering {
+		c.disableFiltering()
+	}
+
 	c.items = utils.SliceMap(chats, item.NewItem)
 	if c.paginator == nil {
 		c.paginator = NewPaginator(c.items)
