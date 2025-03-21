@@ -3,11 +3,7 @@ package chatlist
 import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
-	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 func (c *Component) Init() tea.Cmd {
@@ -15,13 +11,13 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if !c.Focused() {
+	if !c.focus {
 		return c, nil
 	}
 
 	var cmds []tea.Cmd
 
-	if c.filtering {
+	if c.filter.enabled {
 		cmd := c.handleFiltering(msg)
 		cmds = append(cmds, cmd)
 	}
@@ -45,7 +41,7 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return c, events.DialogFocusCMD(currentItem.ID)
 		case key.Matches(msg, c.keyMap.ShowSearch):
 			c.enableFiltering()
-		case key.Matches(msg, c.keyMap.CloseSearch) && c.filtering:
+		case key.Matches(msg, c.keyMap.CloseSearch) && c.filter.enabled:
 			c.disableFiltering()
 		}
 	}
@@ -55,8 +51,8 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if !c.paginator.IsEmpty() {
 		previousItem := c.paginator.ItemByIndex(previousItemIdx)
 		currentItem := c.paginator.ItemByIndex(currentItemIdx)
-		previousItem.Blur()
-		currentItem.Focus()
+		previousItem.blur()
+		currentItem.focus()
 		c.paginator.SetItemOn(previousItemIdx, previousItem)
 		c.paginator.SetItemOn(currentItemIdx, currentItem)
 	}
@@ -65,35 +61,10 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	titleView := c.titleStyle.Render(c.title)
-	headerView := titleView
-
-	if c.filtering {
-		filterInputView := c.filterInputStyle.Render(
-			c.filterInput.View(),
-		)
-		headerView = filterInputView
-	}
-
-	itemsView := c.itemsView()
-	paginatorView := c.paginator.View()
-	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(), headerView, itemsView, paginatorView,
-	)
-	emptySpace := common.VerticalGap(availableHeight)
-
-	sections := []string{
-		headerView,
-		itemsView,
-		emptySpace,
-		paginatorView,
-	}
-
-	return c.Render(
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			sections...,
-		),
+	return c.view.render(
+		c.title,
+		c.filter,
+		c.paginator,
 	)
 }
 
@@ -101,26 +72,12 @@ func (c *Component) HelpView() string {
 	return c.help.View()
 }
 
-func (c *Component) itemsView() string {
-	itemViews := utils.SliceMap(
-		c.paginator.ItemsOnCurrentPage(),
-		func(item item.Item) string {
-			return item.View(c.InnerWidth())
-		},
-	)
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		itemViews...,
-	)
-}
-
 func (c *Component) handleFiltering(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 
-	previousFilteredItems := c.filterItems()
+	previousFilteredItems := c.filter.filterItems(c.items)
 
-	c.filterInput, cmd = c.filterInput.Update(msg)
+	c.filter, cmd = c.filter.update(msg)
 
 	c.applyFiltering(previousFilteredItems)
 

@@ -2,128 +2,96 @@ package chatlist
 
 import (
 	"slices"
-	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/chatlist/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
+	"github.com/yekuanyshev/xaphir/pkg/paginator"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 type Component struct {
-	*base.Component
+	focus bool
 
 	title     string
-	items     []item.Item
-	paginator *Paginator[item.Item]
-
-	titleStyle lipgloss.Style
+	items     []Item
+	paginator *paginator.ItemPaginator[Item]
 
 	keyMap KeyMap
 	help   *help.Component
 
-	filtering        bool
-	filterInput      textinput.Model
-	filterInputStyle lipgloss.Style
+	filter *filter
+	view   *view
 }
 
 func NewComponent() *Component {
-	style := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("36"))
-
-	titleStyle := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		MarginBottom(1).
-		Foreground(lipgloss.Color("#fff")).
-		Background(lipgloss.Color("62")).
-		Bold(true)
-
 	keyMap := DefaultKeyMap()
-	help := help.New(keyMap)
-
-	filterInput := textinput.New()
-	filterInput.Placeholder = "Search..."
-	filterInputStyle := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("36"))
 
 	return &Component{
-		Component:        base.NewComponent(base.WithStyle(style)),
-		title:            "Chats",
-		items:            nil,
-		paginator:        nil,
-		titleStyle:       titleStyle,
-		keyMap:           keyMap,
-		help:             help,
-		filtering:        false,
-		filterInput:      filterInput,
-		filterInputStyle: filterInputStyle,
+		title:     "Chats",
+		items:     nil,
+		paginator: nil,
+		keyMap:    keyMap,
+		help:      help.New(keyMap),
+		filter:    newFilter(),
+		view:      newView(),
 	}
 }
 
 func (c *Component) SetWidth(width int) {
-	c.Component.SetWidth(width)
-	c.paginator.SetWidth(c.InnerWidth())
-	c.filterInput.Width = c.InnerWidth()
-	c.filterInput.CharLimit = 32
-	c.filterInputStyle = c.filterInputStyle.Width(
-		c.InnerWidth() - c.filterInputStyle.GetHorizontalFrameSize(),
-	)
+	c.view.setWidth(width)
+	c.filter.setWidth(c.view.innerWidth())
 }
 
 func (c *Component) SetHeight(height int) {
-	c.Component.SetHeight(height)
+	c.view.setHeight(height)
 	c.paginator.SetLimit(c.calculateLimit())
 	c.blurItems()
 }
 
 func (c *Component) Focus() {
-	c.Component.Focus()
-	c.SetStyle(c.Style().Faint(false))
-	c.titleStyle = c.titleStyle.Faint(false)
+	c.focus = true
+	c.view.focus()
 }
 
 func (c *Component) Blur() {
-	c.Component.Blur()
-	c.SetStyle(c.Style().Faint(true))
-	c.titleStyle = c.titleStyle.Faint(true)
+	c.focus = false
+	c.view.blur()
+}
+
+func (c *Component) Focused() bool {
+	return c.focus
 }
 
 func (c *Component) SetItems(chats []models.Chat) {
-	if c.filtering {
+	if c.filter.enabled {
 		c.disableFiltering()
 	}
 
-	c.items = utils.SliceMap(chats, item.NewItem)
+	c.items = utils.SliceMap(chats, newItem)
 	if c.paginator == nil {
-		c.paginator = NewPaginator(c.items)
-		c.paginator.SetWidth(c.InnerWidth())
-		c.paginator.SetLimit(c.calculateLimit())
+		// limit for initializing, correct limit will be after c.SetHeight()
+		initialLimit := 0
+		c.paginator = paginator.NewItemPaginator(c.items, initialLimit)
 	}
 	c.paginator.SetItems(c.items)
 	if len(c.items) > 0 {
-		c.items[0].Focus()
+		c.items[0].focus()
 	}
 }
 
 func (c *Component) calculateLimit() int {
 	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(),
-		c.titleStyle.Render(c.title),
-		c.paginator.View(),
+		c.view.innerHeight(),
+		c.view.renderTitle(c.title),
+		c.view.renderPaginator(c.paginator),
 	)
 	h := 0
 	num := 0
 
 	for _, item := range c.items {
-		viewHeight := lipgloss.Height(item.View(c.InnerWidth()))
+		viewHeight := lipgloss.Height(c.view.renderItem(item))
 		if h+viewHeight >= availableHeight {
 			return num
 		}
@@ -134,50 +102,32 @@ func (c *Component) calculateLimit() int {
 	return num
 }
 
-func (c *Component) applyFiltering(previousFilteredItems []item.Item) {
-	filteredItems := c.filterItems()
+func (c *Component) applyFiltering(previousFilteredItems []Item) {
+	filteredItems := c.filter.filterItems(c.items)
 
 	if !slices.EqualFunc(
 		previousFilteredItems,
 		filteredItems,
-		func(item1, item2 item.Item) bool { return item1.ID == item2.ID },
+		func(item1, item2 Item) bool { return item1.ID == item2.ID },
 	) {
 		c.paginator.SetItems(filteredItems)
 	}
 }
 
 func (c *Component) enableFiltering() {
-	c.filtering = true
-	c.filterInput.Focus()
-	c.paginator.SetItems(c.filterItems())
+	c.filter.enable()
+	c.paginator.SetItems(nil)
 	c.blurItems()
 }
 
 func (c *Component) disableFiltering() {
-	c.filtering = false
-	c.filterInput.Blur()
-	c.filterInput.SetValue("")
+	c.filter.disable()
 	c.paginator.SetItems(c.items)
 	c.blurItems()
 }
 
-func (c *Component) filterItems() []item.Item {
-	inputValue := c.filterInput.Value()
-	inputValue = strings.TrimSpace(inputValue)
-	inputValue = strings.ToLower(inputValue)
-
-	if inputValue == "" {
-		return nil
-	}
-
-	return utils.SliceFilter(c.items, func(item item.Item) bool {
-		username := strings.ToLower(item.Username)
-		return strings.Contains(username, inputValue)
-	})
-}
-
 func (c *Component) blurItems() {
 	for i := range c.items {
-		c.items[i].Blur()
+		c.items[i].blur()
 	}
 }
