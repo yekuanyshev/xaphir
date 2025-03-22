@@ -2,17 +2,15 @@ package dialog
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/base"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/help"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 )
 
 type Component struct {
-	*base.Component
-
 	chatID int64
+
+	focus bool
 
 	title        string
 	blurredTitle string
@@ -23,12 +21,9 @@ type Component struct {
 	focusedInputPlaceholder string
 	blurredInputPlaceholder string
 
-	titleStyle        lipgloss.Style
-	blurredTitleStyle lipgloss.Style
-	inputStyle        lipgloss.Style
-
 	keyMap KeyMap
 	help   *help.Component
+	view   *view
 }
 
 func NewComponent() *Component {
@@ -40,65 +35,50 @@ func NewComponent() *Component {
 
 	blurredTitle := "Select a chat to start messaging..."
 
-	style := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("36"))
-
-	titleStyle := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		MarginBottom(1).
-		Foreground(lipgloss.Color("#fff")).
-		Background(lipgloss.Color("62")).
-		Bold(true)
-
-	blurredTitleStyle := lipgloss.NewStyle().
-		Faint(true)
-
-	inputStyle := lipgloss.NewStyle().
-		PaddingLeft(1).PaddingRight(1).
-		BorderStyle(lipgloss.RoundedBorder())
-
 	keyMap := DefaultKeyMap()
 	help := help.New(keyMap)
 
 	return &Component{
-		Component:               base.NewComponent(base.WithStyle(style)),
 		title:                   "",
 		blurredTitle:            blurredTitle,
 		slider:                  NewSlider(),
 		input:                   input,
 		focusedInputPlaceholder: focusedInputPlaceholder,
 		blurredInputPlaceholder: blurredInputPlaceholder,
-		titleStyle:              titleStyle,
-		blurredTitleStyle:       blurredTitleStyle,
-		inputStyle:              inputStyle,
 		keyMap:                  keyMap,
 		help:                    help,
+		view:                    newView(),
 	}
 }
 
 func (c *Component) SetWidth(width int) {
-	c.Component.SetWidth(width)
-	c.slider.SetWidth(c.InnerWidth())
-	c.inputStyle = c.inputStyle.Width(c.InnerWidth() - c.inputStyle.GetHorizontalFrameSize())
+	c.view.setWidth(width)
+	c.slider.SetWidth(c.view.innerWidth())
 }
 
 func (c *Component) SetHeight(height int) {
-	c.Component.SetHeight(height)
+	c.view.setHeight(height)
 
 	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(),
-		c.titleStyle.Render(c.title),
-		c.inputStyle.Render(c.input.View()),
+		c.view.innerHeight(),
+		c.view.renderTitle(c.title),
+		c.view.renderInput(c.input),
 	)
 
 	c.slider.SetHeight(availableHeight)
 }
 
+func (c *Component) Focus() {
+	c.focus = true
+}
+
 func (c *Component) Blur() {
-	c.Component.Blur()
+	c.focus = false
 	c.input.SetValue("")
+}
+
+func (c *Component) Focused() bool {
+	return c.focus
 }
 
 func (c *Component) SetTitle(title string) {
@@ -116,13 +96,13 @@ func (c *Component) SetChatID(chatID int64) {
 func (c *Component) inputFocus() {
 	c.input.Focus()
 	c.input.Placeholder = c.focusedInputPlaceholder
-	c.inputStyle = c.inputStyle.BorderForeground(lipgloss.Color("36"))
+	c.view.inputFocus()
 }
 
 func (c *Component) inputBlur() {
 	c.input.Blur()
 	c.input.Placeholder = c.blurredInputPlaceholder
-	c.inputStyle = c.inputStyle.UnsetBorderForeground()
+	c.view.inputBlur()
 }
 
 func (c *Component) IsTypingMessage() bool {

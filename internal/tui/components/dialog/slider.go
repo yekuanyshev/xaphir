@@ -2,7 +2,6 @@ package dialog
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/models"
 	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
@@ -11,7 +10,7 @@ type Slider struct {
 	width  int
 	height int
 
-	items []item.Item
+	items []Item
 	start int
 	end   int
 }
@@ -26,7 +25,7 @@ func (s *Slider) SetWidth(width int) {
 func (s *Slider) SetHeight(height int) { s.height = height }
 
 func (s *Slider) SetMessages(messages []models.ChatMessage) {
-	s.items = utils.SliceMap(messages, item.NewItem)
+	s.items = utils.SliceMap(messages, newItem)
 	s.end = len(s.items)
 	s.start = s.calculateStart(max(s.end-1, 0))
 }
@@ -43,7 +42,7 @@ func (s *Slider) Decrement() {
 	s.start = s.calculateStart(s.end - 1)
 }
 
-func (s *Slider) GetItems() []item.Item {
+func (s *Slider) GetItems() []Item {
 	return s.items[s.start:s.end]
 }
 
@@ -57,7 +56,7 @@ func (s *Slider) calculateStart(end int) int {
 	i := end
 
 	for i >= 0 {
-		itemViewHeight := lipgloss.Height(s.items[i].View(s.width))
+		itemViewHeight := lipgloss.Height(s.items[i].view(s.width))
 
 		if h+itemViewHeight >= availHeight {
 			return i + 1

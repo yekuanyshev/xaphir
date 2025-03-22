@@ -5,11 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/common"
-	"github.com/yekuanyshev/xaphir/internal/tui/components/dialog/item"
 	"github.com/yekuanyshev/xaphir/internal/tui/components/events"
-	"github.com/yekuanyshev/xaphir/pkg/utils"
 )
 
 func (c *Component) Init() tea.Cmd {
@@ -17,7 +13,7 @@ func (c *Component) Init() tea.Cmd {
 }
 
 func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if !c.Focused() {
+	if !c.focus {
 		return c, nil
 	}
 
@@ -61,57 +57,15 @@ func (c *Component) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (c *Component) View() string {
-	if !c.Focused() {
-		return c.blurredView()
-	}
-
-	titleView := c.titleStyle.Render(c.title)
-	itemsView := c.itemsView()
-	inputView := c.inputStyle.Render(c.input.View())
-	availableHeight := common.CalculateAvailableHeight(
-		c.InnerHeight(), titleView, itemsView, inputView,
-	)
-	emptySpace := common.VerticalGap(availableHeight)
-
-	sections := []string{
-		titleView,
-		emptySpace,
-		itemsView,
-		inputView,
-	}
-
-	return c.Render(
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			sections...,
-		),
+	return c.view.render(
+		c.focus,
+		c.blurredTitle,
+		c.title,
+		c.slider,
+		c.input,
 	)
 }
 
 func (c *Component) HelpView() string {
 	return c.help.View()
-}
-
-func (c *Component) blurredView() string {
-	return c.Render(
-		lipgloss.Place(
-			c.InnerWidth(), c.InnerHeight(),
-			lipgloss.Center, lipgloss.Center,
-			c.blurredTitleStyle.Render(c.blurredTitle),
-		),
-	)
-}
-
-func (c *Component) itemsView() string {
-	itemViews := utils.SliceMap(
-		c.slider.GetItems(),
-		func(item item.Item) string {
-			return item.View(c.InnerWidth())
-		},
-	)
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		itemViews...,
-	)
 }
